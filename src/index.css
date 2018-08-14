@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css?family=M+PLUS+1p');
+
+html,
+body,
+textarea,
+input,
+a,
+button {
+  font-family: 'M PLUS 1p', Helvetica, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+
+  -webkit-font-smoothing: antialiased;
+}
+
+p,
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: inherit;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
