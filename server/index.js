@@ -85,7 +85,7 @@ app.get(
   passport.authenticate('spotify', {
     failureRedirect: '/login'
   }),
-  (req, res) => res.redirect('http://localhost:3000/')
+  (req, res) => res.redirect(REDIRECT_URI.replace('/callback', ''))
 )
 
 app.get('/logout', (req, res) => {
