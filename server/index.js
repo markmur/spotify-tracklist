@@ -66,11 +66,6 @@ if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '..', 'public')))
 }
 
-// Handle React routing, return all requests to React app
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'build', 'index.html'))
-})
-
 app.get(
   '/auth/spotify',
   passport.authenticate('spotify', {
@@ -185,6 +180,11 @@ app.post('/search', isAuthenticated, (req, res) => {
     .catch(errors => {
       console.error(errors)
     })
+})
+
+// Handle React routing, return all requests to React app
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'build', 'index.html'))
 })
 
 app.listen(PORT, err => {
