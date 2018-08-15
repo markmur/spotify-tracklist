@@ -1,51 +1,105 @@
-import React, { Component } from 'react'
+import React, { Fragment, Component } from 'react'
 import axios from 'axios'
 import { hot } from 'react-hot-loader'
 import styled from 'styled-components'
-import { Flex, Box } from 'grid-styled'
+import { Flex } from 'grid-styled'
+import { lighten } from 'polished'
+import { space } from 'styled-system'
+
+const get = (obj, key, fallback) => {
+  if (!obj) return fallback
+
+  return (
+    key
+      .split('.')
+      .reduce((state, x) => (state && state[x] ? state[x] : null), obj) ||
+    fallback
+  )
+}
 
 const theme = {
   colors: {
-    dark: '#1a1a1a',
+    dark: '#191414',
+    light: '#272626',
     spotify: '#1db954',
-    border: '#1a1a1a'
+    border: '#1a1a1a',
+    footer: '#1f1e21',
+    header: '#26262d'
   }
 }
 
+const Header = styled.header`
+  height: 56px;
+  background: ${theme.colors.header};
+  padding: 1em;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`
+
+const Footer = styled.footer`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  white-space: nowrap;
+  height: 56px;
+  background: ${theme.colors.footer};
+  padding: 1em 2em;
+  color: white;
+  font-size: 13px;
+  text-align: center;
+`
+
 const Content = styled.div`
   display: flex;
-  height: 100vh;
+  height: calc(100vh - 56px - 56px);
+  background: ${lighten(0.001, theme.colors.footer)};
 `
 
 const LeftPanel = styled.div`
   flex: 0 1 50%;
   background: white;
-  max-height: 100vh;
   overflow: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 `
 
 const Textarea = styled.textarea`
+  flex: 1;
   width: 100%;
   border: none;
   outline: none;
-  font-size: 14px;
-  height: 80vh;
+  font-size: 15px;
+  font-weight: bold;
+  height: 70vh;
+  line-height: 2.5;
+  padding: 1.75em;
+  color: white;
+  resize: none;
+  background: ${lighten(0.001, theme.colors.footer)};
 `
 
 const RightPanel = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   flex: 0 1 50%;
   background: ${theme.colors.dark};
   color: white;
-  max-height: 100vh;
-  overflow: auto;
-  padding: 1em;
 `
 
-const Albums = styled.div``
+const Albums = styled.div`
+  padding: 1em 2em 2em;
+  flex: 1;
+  overflow: auto;
+  max-height: calc(100vh - 56px - 56px);
+`
 
 const Album = styled.a`
   display: flex;
-  padding: 1em;
+  padding: 0.75em 1em;
   border-radius: 4px;
   border-bottom: 1px solid ${theme.colors.border};
 
@@ -63,7 +117,9 @@ const Image = styled.img.attrs({
   width: 40,
   height: 40
 })`
+  flex: 0 1 auto;
   border-radius: 3px;
+  ${space};
 `
 
 const SongTitle = styled.strong`
@@ -80,6 +136,40 @@ const SongArtist = styled.small`
   font-size: 12px;
 `
 
+const ActionsBar = styled.div`
+  background: ${theme.colors.light};
+  display: flex;
+  justify-content: flex-end;
+`
+
+const hoverColor = color => `
+&:hover {
+  background: ${lighten(0.05, color)};
+}
+`
+const primary = p =>
+  p.primary &&
+  `background: ${theme.colors.spotify}; ${hoverColor(theme.colors.spotify)}`
+
+const secondary = p =>
+  p.secondary &&
+  `background: ${theme.colors.dark}; ${hoverColor(theme.colors.dark)}`
+
+const ActionButton = styled.button`
+  border: none;
+  outline: none;
+  color: white;
+  padding: 1.35em 2.5em;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+
+  ${primary};
+  ${secondary};
+`
+
 const SpotifyButton = styled.button`
   background: ${theme.colors.spotify};
   border-radius: 35px;
@@ -92,24 +182,87 @@ const SpotifyButton = styled.button`
   padding: 0.8em 3em;
   font-size: 13px;
   cursor: pointer;
+  align-self: center;
+
+  ${hoverColor(theme.colors.spotify)};
+  ${p =>
+    p.small &&
+    `
+    font-size: 12px;
+    padding: 0.5em 1.75em;
+  `};
+`
+
+const SpotifyLink = SpotifyButton.withComponent('a')
+
+const Avatar = styled.img`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  ${space};
 `
 
 const Modal = styled.div`
+  display: ${p => (p.visible ? 'block' : 'none')};
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-25%, -25%);
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: auto;
   padding: 2em;
   color: white;
   z-index: 100;
-  background: ${theme.colors.dark};
 `
 
-const get = (obj, key, fallback) =>
-  key
-    .split('.')
-    .reduce((state, x) => (state && state[x] ? state[x] : null), obj) ||
-  fallback
+const Playlists = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-height: 75vh;
+  max-width: 500px;
+  overflow: auto;
+  padding: 2em;
+  color: white;
+  z-index: 100;
+  font-weight: bold;
+  background: ${theme.colors.dark};
+  border-radius: 4px;
+  z-index: 2;
+`
+
+const Backdrop = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1;
+`
+
+const Playlist = styled.div`
+  display: flex;
+  justify-content: space-between;
+  padding: 1em;
+  font-size: 14px;
+  overflow: hidden;
+  border-bottom: 1px solid ${theme.colors.light};
+
+  &:hover {
+    background: ${theme.colors.light};
+  }
+
+  strong {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    padding-right: 1em;
+  }
+`
 
 class App extends Component {
   state = {
@@ -118,7 +271,10 @@ class App extends Component {
     results: [],
     total: 0,
     found: 0,
-    playlists: []
+    playlists: [],
+    adding: null,
+    added: [],
+    modalVisible: false
   }
 
   componentDidMount() {
@@ -139,17 +295,21 @@ class App extends Component {
 
     const removed = value
       .split('\n')
-      .map(x => /([0-9]{0,2})\:([0-9]{0,2})([-\s]*)(.+)/gi.exec(x)[4])
-
-    console.log({ removed })
+      .map(
+        x =>
+          /([0-9]{0,2}[\:\.]*[0-9]{0,2}[\:\.]*[0-9]{0,2})?([-\s]*)(.+)/gi.exec(
+            x
+          )[3]
+      )
+      .map(x => x.replace(/\[.+\]$/gim, ''))
+      .map(x => x.trim().replace('&', ''))
 
     this.setState({ value: removed.join('\n').replace(/\u2013|\u2014/g, '-') })
   }
 
   createPlaylist = async name => {
-    const { user } = this.state
     try {
-      const playlist = await axios.put(`/v1/users/${user.id}/playlists`, {
+      const playlist = await axios.post(`/playlists/new`, {
         name
       })
       console.log(playlist)
@@ -158,10 +318,28 @@ class App extends Component {
     }
   }
 
+  addTracksToPlaylist = async (id, tracks) => {
+    this.setState({ adding: id })
+    try {
+      await axios.post(`/playlists/${id}/tracks`, {
+        uris: tracks.map(track => track.uri)
+      })
+      this.setState(state => ({ adding: null, added: [...state.added, id] }))
+      this.getPlaylists()
+    } catch (err) {
+      console.error(err)
+      this.setState({ adding: null })
+    }
+  }
+
   getPlaylists = async () => {
     try {
-      const playlists = await axios.get('/v1/me/playlists')
-      this.setState({ playlists })
+      const { data } = await axios.get('/playlists')
+      console.log(data)
+      this.setState({
+        playlists: data.items,
+        modalVisible: true
+      })
     } catch (err) {
       console.error(err)
     }
@@ -174,10 +352,6 @@ class App extends Component {
         list: value
       })
       .then(({ data }) => {
-        // const indexesOfNotFound = data
-        //   .map((x, i) => (x.length > 0 ? null : i))
-        //   .filter(x => x)
-
         const results = data
           .filter(x => x.length)
           .map(x => this.getTrackInformation(x[0]))
@@ -216,18 +390,58 @@ class App extends Component {
 
     return (
       <div>
-        <Modal>
-          <ul>
-            {this.state.playlists.map(playlist => (
-              <li key={playlist.id}>{playlist.name}</li>
-            ))}
-          </ul>
+        <Header>
+          <h5>Spotify Playlist Builder</h5>
+          {this.state.user.id && (
+            <Flex alignItems="center">
+              {this.state.user.displayName}
+              <Avatar ml={3} src={this.state.user.photos.find(x => x)} />
+            </Flex>
+          )}
+        </Header>
+
+        <Modal visible={this.state.modalVisible}>
+          <Backdrop
+            onClick={() =>
+              this.setState({
+                modalVisible: false
+              })
+            }
+          />
+          <Playlists>
+            <h2>My Playlists</h2>
+            <div>
+              {this.state.playlists.map(playlist => (
+                <Playlist key={playlist.id}>
+                  <Flex alignItems="center" style={{ overflow: 'hidden' }}>
+                    <Image mr={3} src={get(playlist.images[0], 'url')} />
+                    <strong>{playlist.name}</strong>
+                  </Flex>
+                  <SpotifyButton
+                    small
+                    onClick={() =>
+                      this.addTracksToPlaylist(playlist.id, this.state.results)
+                    }
+                  >
+                    {this.state.added.includes(playlist.id)
+                      ? '✓ Added'
+                      : this.state.adding === playlist.id
+                        ? 'Adding...'
+                        : 'Add'}
+                  </SpotifyButton>
+                </Playlist>
+              ))}
+            </div>
+          </Playlists>
         </Modal>
+
         <Content>
           <LeftPanel>
-            <SpotifyButton href="http://localhost:8888/auth/spotify">
-              Login with Spotify
-            </SpotifyButton>
+            {!this.state.user.id && (
+              <SpotifyLink href="http://localhost:8888/auth/spotify">
+                Login with Spotify
+              </SpotifyLink>
+            )}
 
             <Textarea
               placeholder="Artist - Track Name"
@@ -238,38 +452,61 @@ class App extends Component {
                 })
               }
             />
-            <button type="button" onClick={this.removeTrackNumbers}>
-              Remove Track Numbers
-            </button>
-            <button type="button" onClick={this.fetch}>
-              Go!
-            </button>
+            <ActionsBar>
+              <ActionButton secondary onClick={this.removeTrackNumbers}>
+                Remove Track Numbers
+              </ActionButton>
+              <ActionButton
+                secondary={this.state.value.length <= 0}
+                primary={this.state.value.length > 0}
+                onClick={this.fetch}
+              >
+                Find tracks on Spotify
+              </ActionButton>
+            </ActionsBar>
           </LeftPanel>
 
           <RightPanel>
-            <h4>
-              Found {found} of {total} on Spotify
-            </h4>
-            <Albums>
-              {this.state.results.map(({ id, title, artist, image, uri }) => (
-                <Album key={id} href={uri}>
-                  <div>
-                    <Image src={image.url} />
-                  </div>
-                  <div>
-                    <SongTitle>{title}</SongTitle>
-                    <SongArtist>{artist}</SongArtist>
-                  </div>
-                </Album>
-              ))}
-            </Albums>
-            <Flex mt={3} justifyContent="center">
-              <SpotifyButton onClick={this.getPlaylists}>
-                Add to playlist
-              </SpotifyButton>
-            </Flex>
+            {this.state.results.length > 0 ? (
+              <Fragment>
+                <Albums>
+                  <h4>
+                    Found {found} of {total} on Spotify
+                  </h4>
+                  {this.state.results.map(
+                    ({ id, title, artist, image, uri }) => (
+                      <Album key={id} href={uri}>
+                        <div>
+                          <Image src={image.url} />
+                        </div>
+                        <div>
+                          <SongTitle>{title}</SongTitle>
+                          <SongArtist>{artist}</SongArtist>
+                        </div>
+                      </Album>
+                    )
+                  )}
+                </Albums>
+
+                <ActionsBar>
+                  <ActionButton primary onClick={this.getPlaylists}>
+                    Add tracks to playlist
+                  </ActionButton>
+                </ActionsBar>
+              </Fragment>
+            ) : null}
           </RightPanel>
         </Content>
+        <Footer>
+          <div>
+            <a href="https://github.com/markmur/spotify-finder">
+              View Source on GitHub
+            </a>
+          </div>
+          <div>
+            <p>This app is not affiliated with Spotify.</p>
+          </div>
+        </Footer>
       </div>
     )
   }
