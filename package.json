@@ -2,7 +2,7 @@
   "name": "spotify-playlist-builder",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://localhost:8888",
+  "proxy": "http://localhost:8080",
   "dependencies": {
     "axios": "^0.18.0",
     "body-parser": "^1.18.3",
@@ -28,9 +28,10 @@
     "swig": "^1.4.2"
   },
   "scripts": {
-    "start": "concurrently \"yarn server\" \"yarn client\"",
+    "dev": "concurrently \"yarn server\" \"yarn client\"",
     "client": "react-scripts start",
     "server": "nodemon server/index.js --watch server",
+    "start": "node server/index.js",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"

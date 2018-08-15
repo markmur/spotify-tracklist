@@ -9,23 +9,19 @@ const bodyParser = require('body-parser')
 const morgan = require('morgan')
 const cookieParser = require('cookie-parser')
 const passport = require('passport')
+const Spotify = require('spotify-web-api-node')
 const SpotifyStrategy = require('passport-spotify').Strategy
 
-const { CLIENT_ID, CLIENT_SECRET } = process.env
-
-const Spotify = require('spotify-web-api-node')
+const PORT = 8080
+const SPOTIFY = 'https://api.spotify.com/v1'
+const { CLIENT_ID, CLIENT_SECRET, REDIRECT_URI } = process.env
 
 const spotify = new Spotify({
   clientId: CLIENT_ID,
   clientSecret: CLIENT_SECRET,
-  redirectUri: 'http://localhost:8888/callback'
+  redirectUri: REDIRECT_URI
 })
 
-// Simple route middleware to ensure user is authenticated.
-//   Use this route middleware on any resource that needs to be protected.  If
-//   the request is authenticated (typically via a persistent login session),
-//   the request will proceed. Otherwise, the user will be redirected to the
-//   login page.
 const isAuthenticated = (req, res, next) => {
   if (req.isAuthenticated()) {
     return next()
@@ -34,13 +30,6 @@ const isAuthenticated = (req, res, next) => {
   res.status(401).send()
 }
 
-// Passport session setup.
-//   To support persistent login sessions, Passport needs to be able to
-//   serialize users into and deserialize users out of the session. Typically,
-//   this will be as simple as storing the user ID when serializing, and finding
-//   the user by ID when deserializing. However, since this example does not
-//   have a database of user records, the complete spotify profile is serialized
-//   and deserialized.
 passport.serializeUser((user, done) => done(null, user))
 passport.deserializeUser((obj, done) => done(null, obj))
 
@@ -53,7 +42,7 @@ passport.use(
     {
       clientID: CLIENT_ID,
       clientSecret: CLIENT_SECRET,
-      callbackURL: 'http://localhost:8888/callback'
+      callbackURL: REDIRECT_URI
     },
     (accessToken, refreshToken, expires, profile, done) => {
       spotify.setAccessToken(accessToken)
@@ -80,11 +69,6 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'build', 'index.html'))
 })
 
-// GET /auth/spotify
-//   Use passport.authenticate() as route middleware to authenticate the
-//   request. The first step in spotify authentication will involve redirecting
-//   the user to spotify.com. After authorization, spotify will redirect the user
-//   back to this application at /auth/spotify/callback
 app.get(
   '/auth/spotify',
   passport.authenticate('spotify', {
@@ -99,15 +83,12 @@ app.get(
   })
 )
 
-// GET /auth/spotify/callback
-//   Use passport.authenticate() as route middleware to authenticate the
-//   request. If authentication fails, the user will be redirected back to the
-//   login page. Otherwise, the primary route function function will be called,
-//   which, in this example, will redirect the user to the home page.
 app.get(
   '/callback',
-  passport.authenticate('spotify', { failureRedirect: '/login' }),
-  (req, res) => res.redirect('http://localhost:3000/')
+  passport.authenticate('spotify', {
+    failureRedirect: '/login'
+  }),
+  (req, res) => res.redirect('/')
 )
 
 app.get('/logout', (req, res) => {
@@ -115,10 +96,10 @@ app.get('/logout', (req, res) => {
   res.redirect('/')
 })
 
+// Return user profile
 app.get('/profile', isAuthenticated, (req, res) => res.send(req.user.profile))
 
-const SPOTIFY = 'https://api.spotify.com/v1'
-
+// Fetch playlists
 app.get('/playlists', isAuthenticated, async (req, res) => {
   try {
     const { data } = await axios.get(`${SPOTIFY}/me/playlists`, {
@@ -137,14 +118,8 @@ app.get('/playlists', isAuthenticated, async (req, res) => {
   }
 })
 
+// Add tracks to playlist
 app.post('/playlists/:id/tracks', isAuthenticated, async (req, res) => {
-  console.log(
-    req.params,
-    req.user.accessToken,
-    `${SPOTIFY}/users/${req.user.profile.id}/playlists/${
-      req.params.id
-    }/tracks?uris=${req.body.uris}`
-  )
   try {
     const { data } = await axios.post(
       `${SPOTIFY}/playlists/${req.params.id}/tracks`,
@@ -158,7 +133,6 @@ app.post('/playlists/:id/tracks', isAuthenticated, async (req, res) => {
         }
       }
     )
-    console.log(data)
     return res.send(data)
   } catch ({ response }) {
     const { status, statusText } = response
@@ -170,6 +144,7 @@ app.post('/playlists/:id/tracks', isAuthenticated, async (req, res) => {
   }
 })
 
+// Create new playlist
 app.post('/playlists/new', isAuthenticated, async (req, res) => {
   try {
     const { data } = await axios.post(`${SPOTIFY}/${req.user.id}/playlists`, {
@@ -182,6 +157,7 @@ app.post('/playlists/new', isAuthenticated, async (req, res) => {
   }
 })
 
+// Search tracks
 app.post('/search', isAuthenticated, (req, res) => {
   const { list } = req.body
 
@@ -204,11 +180,13 @@ app.post('/search', isAuthenticated, (req, res) => {
     .then(results => {
       return res.send(results)
     })
-    .catch(console.log)
+    .catch(errors => {
+      console.error(errors)
+    })
 })
 
-app.listen(8888, err => {
+app.listen(PORT, err => {
   if (err) console.error(err)
 
-  console.log('Listening on http://localhost:8888')
+  console.log(`Listening on http://localhost:${PORT}`)
 })
