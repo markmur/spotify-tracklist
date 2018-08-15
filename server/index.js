@@ -59,21 +59,17 @@ app.use(session({ secret: 'keyboard cat' }))
 app.use(passport.initialize())
 app.use(passport.session())
 
-app.use(express.static(path.join(__dirname, '..', 'public')))
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'build', 'index.html'))
-})
-
 if (process.env.NODE_ENV === 'production') {
   // Serve any static files
   app.use(express.static(path.join(__dirname, '..', 'build')))
-
-  // Handle React routing, return all requests to React app
-  app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'build', 'index.html'))
-  })
+} else {
+  app.use(express.static(path.join(__dirname, '..', 'public')))
 }
+
+// Handle React routing, return all requests to React app
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'build', 'index.html'))
+})
 
 app.get(
   '/auth/spotify',
