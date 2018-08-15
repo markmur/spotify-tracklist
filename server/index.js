@@ -59,11 +59,11 @@ app.use(session({ secret: 'keyboard cat' }))
 app.use(passport.initialize())
 app.use(passport.session())
 
-app.use(express.static(path.join(__dirname, '..', 'build')))
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'build', 'index.html'))
-})
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '..', 'build')))
+} else {
+  app.use(express.static(path.join(__dirname, '..', 'public')))
+}
 
 app.get(
   '/auth/spotify',
@@ -181,8 +181,12 @@ app.post('/search', isAuthenticated, (req, res) => {
     })
 })
 
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'build', 'index.html'))
+})
+
 app.listen(PORT, err => {
   if (err) console.error(err)
 
-  console.log(`Listening on http://localhost:${PORT}`)
+  console.log(`Listening on port ${PORT}`)
 })
