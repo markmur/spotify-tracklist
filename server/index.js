@@ -12,7 +12,7 @@ const passport = require('passport')
 const Spotify = require('spotify-web-api-node')
 const SpotifyStrategy = require('passport-spotify').Strategy
 
-const PORT = 8080
+const PORT = process.env.PORT || 8080
 const SPOTIFY = 'https://api.spotify.com/v1'
 const { CLIENT_ID, CLIENT_SECRET, REDIRECT_URI } = process.env
 
@@ -59,10 +59,20 @@ app.use(session({ secret: 'keyboard cat' }))
 app.use(passport.initialize())
 app.use(passport.session())
 
+app.use(express.static(path.join(__dirname, '..', 'public')))
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'build', 'index.html'))
+})
+
 if (process.env.NODE_ENV === 'production') {
+  // Serve any static files
   app.use(express.static(path.join(__dirname, '..', 'build')))
-} else {
-  app.use(express.static(path.join(__dirname, '..', 'public')))
+
+  // Handle React routing, return all requests to React app
+  app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'build', 'index.html'))
+  })
 }
 
 app.get(
@@ -84,7 +94,7 @@ app.get(
   passport.authenticate('spotify', {
     failureRedirect: '/login'
   }),
-  (req, res) => res.redirect('/')
+  (req, res) => res.redirect('http://localhost:3000/')
 )
 
 app.get('/logout', (req, res) => {
@@ -179,10 +189,6 @@ app.post('/search', isAuthenticated, (req, res) => {
     .catch(errors => {
       console.error(errors)
     })
-})
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'build', 'index.html'))
 })
 
 app.listen(PORT, err => {

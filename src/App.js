@@ -438,7 +438,9 @@ class App extends Component {
         <Content>
           <LeftPanel>
             {!this.state.user.id && (
-              <SpotifyLink href="/auth/spotify">Login with Spotify</SpotifyLink>
+              <SpotifyLink href="http://localhost:8080/auth/spotify">
+                Login with Spotify
+              </SpotifyLink>
             )}
 
             <Textarea
