@@ -54,7 +54,6 @@ const Footer = styled.footer`
 const Content = styled.div`
   display: flex;
   height: calc(100vh - 56px - 56px);
-  background: ${lighten(0.001, theme.colors.footer)};
 `
 
 const LeftPanel = styled.div`
@@ -64,6 +63,7 @@ const LeftPanel = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  background: ${lighten(0.001, theme.colors.footer)};
 `
 
 const Textarea = styled.textarea`
@@ -438,9 +438,7 @@ class App extends Component {
         <Content>
           <LeftPanel>
             {!this.state.user.id && (
-              <SpotifyLink href="http://localhost:8888/auth/spotify">
-                Login with Spotify
-              </SpotifyLink>
+              <SpotifyLink href="/auth/spotify">Login with Spotify</SpotifyLink>
             )}
 
             <Textarea
