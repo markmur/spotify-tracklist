@@ -13,6 +13,7 @@
     "express-session": "^1.15.6",
     "grid-styled": "^5.0.2",
     "method-override": "^3.0.0",
+    "now-env": "^3.1.0",
     "passport": "^0.4.0",
     "passport-spotify": "^1.0.1",
     "react": "^16.4.2",
