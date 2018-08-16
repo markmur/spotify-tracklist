@@ -33,6 +33,8 @@ import {
   Backdrop
 } from './styles'
 
+GoogleAnalytics.initialize('UA-76403737-6')
+
 const removeEmptyLines = (x = '') => x.trim().length > 0
 const removeFeatured = x => x.replace(/(feat|ft\.)/gim, '')
 const removeSpecialDashes = x => x.replace(/\u2013|\u2014/gm, '-')
@@ -57,7 +59,7 @@ class App extends Component {
   }
 
   componentDidMount() {
-    GoogleAnalytics.initialize('UA-76403737-6')
+    GoogleAnalytics.pageview(window.location.pathname + window.location.search)
 
     spotify
       .getProfile()
