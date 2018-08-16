@@ -46,7 +46,7 @@ router.post('/playlists/:id/tracks', async (req, res) => {
       },
       {
         headers: {
-          Authorization: `Bearer ${req.user.accessToken}`,
+          Authorization: `Bearer ${req.user.token.accessToken}`,
           'Content-Type': 'application/json'
         }
       }
@@ -64,22 +64,48 @@ router.post('/playlists/:id/tracks', async (req, res) => {
 
 // Create new playlist
 router.post('/playlists/new', async (req, res) => {
-  try {
-    const { data } = await axios.post(`${SPOTIFY}/${req.user.id}/playlists`, {
-      name: req.body.name
+  if (!req.body.name) {
+    return res.status(400).json({
+      message: '`name` body parameter is required'
     })
+  }
+
+  try {
+    const { data } = await axios.post(
+      `${SPOTIFY}/users/${req.user.profile.id}/playlists`,
+      {
+        name: req.body.name
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${req.user.token.accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    )
 
     return res.send(data)
-  } catch (err) {
-    return res.status(err).send(err)
+  } catch ({ response }) {
+    const { status, statusText } = response
+    console.error({ status, statusText })
+    return res.status(status).send({
+      status,
+      statusText
+    })
   }
 })
 
 // Search tracks
 router.post('/search', (req, res) => {
-  const { list } = req.body
+  const { query } = req.body
 
-  const songs = list.split('\n').map(x => x.trim())
+  if (!query) {
+    return res.status(400).json({
+      message: '`query` string is required'
+    })
+  }
+
+  const songs = query.split('\n').map(x => x.trim())
 
   const requests = songs.map(song => {
     const [artist, track] = song.split(/[-–]/gi)

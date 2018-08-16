@@ -4,6 +4,21 @@ import { space } from 'styled-system'
 
 const color = color => p => p.theme.colors[color]
 
+export const Label = styled.label`
+  display: block;
+`
+
+export const Input = styled.input`
+  background: transparent;
+  border: none;
+  padding: 1em 0;
+  font-size: 15px;
+  width: 100%;
+  outline: none;
+  color: white;
+  font-weight: bold;
+`
+
 export const Header = styled.header`
   height: 56px;
   background: ${color('header')};

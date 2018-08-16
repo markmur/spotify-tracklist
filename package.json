@@ -37,7 +37,7 @@
     "swig": "^1.4.2"
   },
   "scripts": {
-    "start": "concurrently \"yarn server\" \"yarn client\"",
+    "start": "concurrently \"yarn server:watch\" \"yarn client\"",
     "client": "react-scripts start",
     "server:watch": "nodemon server/index.js --watch server",
     "server": "node server/index.js",

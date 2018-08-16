@@ -13,12 +13,12 @@ class Spotify {
     return this.request('post', path, data)
   }
 
-  request(method = 'get', path) {
-    return axios[method](this.basePath + path)
+  request(method = 'get', path, data) {
+    return axios[method](this.basePath + path, data)
   }
 
   search(query) {
-    return this.post('/search', { list: query })
+    return this.post('/search', { query })
   }
 
   getProfile() {

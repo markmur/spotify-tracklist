@@ -15,6 +15,7 @@ import {
   Albums,
   Album,
   Image,
+  Input,
   LoginButton,
   SongTitle,
   SongArtist,
@@ -39,7 +40,8 @@ class App extends Component {
     playlists: [],
     adding: null,
     added: [],
-    modalVisible: false
+    modalVisible: false,
+    createPlaylistInput: ''
   }
 
   componentDidMount() {
@@ -58,20 +60,9 @@ class App extends Component {
   }
 
   removeTrackNumbers = () => {
-    const { value } = this.state
-
-    const removed = value
-      .split('\n')
-      .map(
-        x =>
-          /([0-9]{0,2}[:.]*[0-9]{0,2}[:.]*[0-9]{0,2})?([-\s]*)(.+)/gi.exec(x)[3]
-      )
-      .map(x => x.replace(/\[.+\]$/gim, ''))
-      .map(x => x.trim().replace('&', ''))
-
-    this.setState({
-      value: removed.join('\n').replace(/\u2013|\u2014/g, '-')
-    })
+    this.setState(state => ({
+      value: this.formatQueryForSearch(state.value)
+    }))
   }
 
   createPlaylist = async name => {
@@ -107,10 +98,10 @@ class App extends Component {
     }
   }
 
-  fetch = () => {
+  search = () => {
     const { value } = this.state
     spotify
-      .search(value)
+      .search(this.formatQueryForSearch(value))
       .then(({ data }) => {
         const results = data
           .filter(x => x.length)
@@ -125,6 +116,20 @@ class App extends Component {
       .catch(err => {
         console.log('Error', err)
       })
+  }
+
+  formatQueryForSearch(query) {
+    return query
+      .split('\n')
+      .map(
+        x =>
+          /([0-9]{0,2}[:.]*[0-9]{0,2}[:.]*[0-9]{0,2})?([-\s]*)(.+)/gi.exec(x)[3]
+      )
+      .map(x => x.replace(/\[.+\]$/gim, ''))
+      .map(x => x.trim().replace('&', ''))
+      .map(x => x.replace(/\u2013|\u2014/gm, '-'))
+      .map(x => x.replace(/(feat|ft\.)/gim, ''))
+      .join('\n')
   }
 
   getTrackInformation(track) {
@@ -142,6 +147,26 @@ class App extends Component {
       title: name,
       image,
       uri
+    }
+  }
+
+  handleCreatePlaylistChange = event => {
+    this.setState({
+      createPlaylistInput: event.target.value
+    })
+  }
+
+  createNewPlaylist = async () => {
+    const { createPlaylistInput } = this.state
+
+    try {
+      const { data } = await spotify.createPlaylist(createPlaylistInput)
+      this.createPlaylistInput.value = ''
+      this.setState(state => ({
+        playlists: [data, ...state.playlists]
+      }))
+    } catch (err) {
+      console.error(err)
     }
   }
 
@@ -183,6 +208,28 @@ class App extends Component {
           <Playlists>
             <h2>My Playlists</h2>
             <div>
+              <Flex
+                mb={2}
+                mx={2}
+                alignItems="center"
+                justifyContent="space-between"
+              >
+                <Input
+                  ref={c => {
+                    this.createPlaylistInput = c
+                  }}
+                  type="text"
+                  name="create-playlist"
+                  value={this.state.createPlaylistInput}
+                  placeholder="Create new playlist..."
+                  onChange={this.handleCreatePlaylistChange}
+                />
+                <div>
+                  <SpotifyButton small onClick={this.createNewPlaylist}>
+                    Create
+                  </SpotifyButton>
+                </div>
+              </Flex>
               {this.state.playlists.map(playlist => (
                 <Playlist key={playlist.id}>
                   <Flex alignItems="center" style={{ overflow: 'hidden' }}>
@@ -233,7 +280,7 @@ class App extends Component {
               <ActionButton
                 secondary={this.state.value.length <= 0}
                 primary={this.state.value.length > 0}
-                onClick={this.fetch}
+                onClick={this.search}
               >
                 Find tracks on Spotify
               </ActionButton>
