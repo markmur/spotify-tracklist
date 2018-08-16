@@ -170,6 +170,7 @@ export const LoginButton = styled.div`
   transform: translate(-50%, -50%);
   padding: 1.25em 0.9em;
   border-radius: 45px;
+  z-index: 100;
   background: ${p => lighten(0.001, p.theme.colors.footer)};
 `
 
