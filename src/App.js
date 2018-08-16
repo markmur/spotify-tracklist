@@ -1,10 +1,13 @@
 import React, { Fragment, Component } from 'react'
 import axios from 'axios'
+import GoogleAnalytics from 'react-ga'
 import { hot } from 'react-hot-loader'
 import styled from 'styled-components'
 import { Flex } from 'grid-styled'
 import { lighten } from 'polished'
 import { space } from 'styled-system'
+
+GoogleAnalytics.initialize('UA-76403737-6')
 
 const get = (obj, key, fallback) => {
   if (!obj) return fallback
