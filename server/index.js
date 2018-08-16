@@ -14,7 +14,13 @@ const spotifyApi = require('./api')
 const { isAuthenticated } = require('./middleware')
 
 const PORT = process.env.PORT || 8080
-const { CLIENT_ID, CLIENT_SECRET, REDIRECT_URI, NODE_ENV } = process.env
+const {
+  CLIENT_ID,
+  CLIENT_SECRET,
+  REDIRECT_URI,
+  NODE_ENV,
+  SESSION_SECRET
+} = process.env
 
 passport.serializeUser((user, done) => done(null, user))
 passport.deserializeUser((obj, done) => done(null, obj))
@@ -46,7 +52,7 @@ const app = express()
 
 app.use(cookieParser())
 app.use(bodyParser.json())
-app.use(session({ secret: 'keyboard cat' }))
+app.use(session({ secret: SESSION_SECRET }))
 
 app.use(morgan('tiny'))
 
