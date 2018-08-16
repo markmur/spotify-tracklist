@@ -29,8 +29,6 @@ import {
   Backdrop
 } from './styles'
 
-GoogleAnalytics.initialize('UA-76403737-6')
-
 class App extends Component {
   state = {
     value: '',
@@ -45,6 +43,8 @@ class App extends Component {
   }
 
   componentDidMount() {
+    GoogleAnalytics.initialize('UA-76403737-6')
+
     spotify
       .getProfile()
       .then(({ data }) =>
