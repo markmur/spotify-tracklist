@@ -299,9 +299,7 @@ class App extends Component {
       .split('\n')
       .map(
         x =>
-          /([0-9]{0,2}[\:\.]*[0-9]{0,2}[\:\.]*[0-9]{0,2})?([-\s]*)(.+)/gi.exec(
-            x
-          )[3]
+          /([0-9]{0,2}[:.]*[0-9]{0,2}[:.]*[0-9]{0,2})?([-\s]*)(.+)/gi.exec(x)[3]
       )
       .map(x => x.replace(/\[.+\]$/gim, ''))
       .map(x => x.trim().replace('&', ''))
@@ -337,7 +335,6 @@ class App extends Component {
   getPlaylists = async () => {
     try {
       const { data } = await axios.get('/api/playlists')
-      console.log(data)
       this.setState({
         playlists: data.items,
         modalVisible: true

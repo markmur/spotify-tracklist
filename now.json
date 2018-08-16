@@ -1,5 +1,4 @@
 {
-  "type": "docker",
   "env": {
     "CLIENT_ID": "@spotify_client_id",
     "CLIENT_SECRET": "@spotify_client_secret",
