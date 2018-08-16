@@ -161,8 +161,8 @@ class App extends Component {
 
     try {
       const { data } = await spotify.createPlaylist(createPlaylistInput)
-      this.createPlaylistInput.value = ''
       this.setState(state => ({
+        createPlaylistInput: '',
         playlists: [data, ...state.playlists]
       }))
     } catch (err) {
