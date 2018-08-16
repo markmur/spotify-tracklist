@@ -40,6 +40,20 @@ export const Footer = styled.footer`
   color: white;
   font-size: 13px;
   text-align: center;
+  color: ${p => lighten(0.2, p.theme.colors.light)};
+
+  strong {
+    margin: 0 1em;
+  }
+
+  a {
+    border-bottom: 1px dashed;
+    padding-bottom: 2px;
+
+    &:hover {
+      color: white;
+    }
+  }
 `
 
 export const Content = styled.div`
