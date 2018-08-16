@@ -2,7 +2,14 @@
   "name": "spotify-finder",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://localhost:8080",
+  "proxy": {
+    "/auth/*": {
+      "target": "http://localhost:8080"
+    },
+    "/api/*": {
+      "target": "http://localhost:8080"
+    }
+  },
   "homepage": "https://spotify-finder.now.sh",
   "dependencies": {
     "axios": "^0.18.0",
@@ -29,11 +36,12 @@
     "swig": "^1.4.2"
   },
   "scripts": {
-    "dev": "concurrently \"yarn server\" \"yarn client\"",
+    "start": "concurrently \"yarn server\" \"yarn client\"",
     "client": "react-scripts start",
-    "server": "nodemon server/index.js --watch server",
+    "server:watch": "nodemon server/index.js --watch server",
+    "server": "node server/index.js",
     "deploy": "now --public && now alias $(echo $(pbpaste)) spotify-finder && now rm spotify-finder --safe",
-    "start": "NODE_ENV=production node server/index.js",
+    "now-start": "NODE_ENV=production node server/index.js",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
@@ -46,6 +54,7 @@
     "eslint-config-xo": "^0.24.1",
     "eslint-config-xo-react": "^0.17.0",
     "eslint-plugin-react": "^7.10.0",
+    "node-debug": "^0.1.0",
     "prettier": "^1.14.2",
     "prettier-eslint": "^8.8.2",
     "xo": "^0.22.0"

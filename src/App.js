@@ -195,9 +195,11 @@ const SpotifyButton = styled.button`
 
 const SpotifyLink = SpotifyButton.withComponent('a')
 
-const Avatar = styled.img`
-  width: 40px;
-  height: 40px;
+const Avatar = styled.img.attrs({
+  size: 30
+})`
+  width: ${p => p.size}px;
+  height: ${p => p.size}px;
   border-radius: 50%;
   ${space};
 `
@@ -279,7 +281,7 @@ class App extends Component {
 
   componentDidMount() {
     axios
-      .get('/profile')
+      .get('/api/profile')
       .then(({ data }) =>
         this.setState({
           user: data
@@ -309,7 +311,7 @@ class App extends Component {
 
   createPlaylist = async name => {
     try {
-      const playlist = await axios.post(`/playlists/new`, {
+      const playlist = await axios.post(`/api/playlists/new`, {
         name
       })
       console.log(playlist)
@@ -321,7 +323,7 @@ class App extends Component {
   addTracksToPlaylist = async (id, tracks) => {
     this.setState({ adding: id })
     try {
-      await axios.post(`/playlists/${id}/tracks`, {
+      await axios.post(`/api/playlists/${id}/tracks`, {
         uris: tracks.map(track => track.uri)
       })
       this.setState(state => ({ adding: null, added: [...state.added, id] }))
@@ -334,7 +336,7 @@ class App extends Component {
 
   getPlaylists = async () => {
     try {
-      const { data } = await axios.get('/playlists')
+      const { data } = await axios.get('/api/playlists')
       console.log(data)
       this.setState({
         playlists: data.items,
@@ -348,7 +350,7 @@ class App extends Component {
   fetch = () => {
     const { value } = this.state
     axios
-      .post('/search', {
+      .post('/api/search', {
         list: value
       })
       .then(({ data }) => {
@@ -388,10 +390,22 @@ class App extends Component {
   render() {
     const { found, total } = this.state
 
+    const placeholder = [
+      'Paste tracklist here. Each track should be on a separate line:',
+      'Artist - Name',
+      'Artist - Name',
+      'Artist - Name',
+      'Artist - Name',
+      'Artist - Name',
+      'Artist - Name',
+      '',
+      '(You may have to manually tidy some track names to increase accuracy of results)'
+    ].join('\n')
+
     return (
       <div>
         <Header>
-          <h5>Spotify Playlist Builder</h5>
+          <h5>Spotify Tracklist Finder</h5>
           {this.state.user.id && (
             <Flex alignItems="center">
               {this.state.user.displayName}
@@ -442,7 +456,7 @@ class App extends Component {
             )}
 
             <Textarea
-              placeholder="Artist - Track Name"
+              placeholder={placeholder}
               value={this.state.value}
               onChange={event =>
                 this.setState({
@@ -499,11 +513,10 @@ class App extends Component {
           <div>
             <a href="https://github.com/markmur/spotify-finder">
               View Source on GitHub
-            </a>
+            </a>{' '}
+            |<span> This app is not affiliated with Spotify.</span>
           </div>
-          <div>
-            <p>This app is not affiliated with Spotify.</p>
-          </div>
+          <div />
         </Footer>
       </div>
     )

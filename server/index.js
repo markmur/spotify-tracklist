@@ -2,37 +2,26 @@
 require('now-env')
 
 const path = require('path')
-const axios = require('axios')
 const express = require('express')
 const session = require('express-session')
 const bodyParser = require('body-parser')
 const morgan = require('morgan')
 const cookieParser = require('cookie-parser')
 const passport = require('passport')
-const Spotify = require('spotify-web-api-node')
 const SpotifyStrategy = require('passport-spotify').Strategy
 
+const spotifyApi = require('./api')
+const { isAuthenticated } = require('./middleware')
+
 const PORT = process.env.PORT || 8080
-const SPOTIFY = 'https://api.spotify.com/v1'
-const { CLIENT_ID, CLIENT_SECRET, REDIRECT_URI } = process.env
-
-const spotify = new Spotify({
-  clientId: CLIENT_ID,
-  clientSecret: CLIENT_SECRET,
-  redirectUri: REDIRECT_URI
-})
-
-const isAuthenticated = (req, res, next) => {
-  if (req.isAuthenticated()) {
-    return next()
-  }
-
-  res.status(401).send()
-}
+const { CLIENT_ID, CLIENT_SECRET, REDIRECT_URI, NODE_ENV } = process.env
 
 passport.serializeUser((user, done) => done(null, user))
 passport.deserializeUser((obj, done) => done(null, obj))
 
+const isProduction = NODE_ENV === 'production'
+
+/* eslint-disable max-params */
 passport.use(
   new SpotifyStrategy(
     {
@@ -41,30 +30,42 @@ passport.use(
       callbackURL: REDIRECT_URI
     },
     (accessToken, refreshToken, expires, profile, done) => {
-      spotify.setAccessToken(accessToken)
-      return done(null, { profile, accessToken })
+      return done(null, {
+        profile,
+        token: {
+          accessToken,
+          refreshToken
+        }
+      })
     }
   )
 )
+/* eslint-enable max-params */
 
 const app = express()
 
 app.use(cookieParser())
 app.use(bodyParser.json())
-app.use(morgan('tiny'))
 app.use(session({ secret: 'keyboard cat' }))
+
+if (!isProduction) app.use(morgan('tiny'))
+
+if (isProduction) {
+  // Serve any static files
+  app.use(express.static(path.join(__dirname, '..', 'build')))
+
+  // Handle React routing, return all requests to React app
+  app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'build', 'index.html'))
+  })
+}
 
 // Initialize Passport!  Also use passport.session() middleware, to support
 // persistent login sessions (recommended).
 app.use(passport.initialize())
 app.use(passport.session())
 
-if (process.env.NODE_ENV === 'production') {
-  // Serve any static files
-  app.use(express.static(path.join(__dirname, '..', 'build')))
-} else {
-  app.use(express.static(path.join(__dirname, '..', 'public')))
-}
+app.get('/health', (req, res) => res.status(200).json('OK'))
 
 app.get(
   '/auth/spotify',
@@ -81,111 +82,14 @@ app.get(
 )
 
 app.get(
-  '/callback',
+  '/auth/callback',
   passport.authenticate('spotify', {
     failureRedirect: '/login'
   }),
-  (req, res) => res.redirect(REDIRECT_URI.replace('/callback', ''))
+  (req, res) => res.redirect(isProduction ? '/' : 'http://localhost:3000')
 )
 
-app.get('/logout', (req, res) => {
-  req.logout()
-  res.redirect('/')
-})
-
-// Return user profile
-app.get('/profile', isAuthenticated, (req, res) => res.send(req.user.profile))
-
-// Fetch playlists
-app.get('/playlists', isAuthenticated, async (req, res) => {
-  try {
-    const { data } = await axios.get(`${SPOTIFY}/me/playlists`, {
-      headers: {
-        Authorization: `Bearer ${req.user.accessToken}`
-      }
-    })
-    return res.send(data)
-  } catch ({ response }) {
-    const { status, statusText } = response
-    console.error({ status, statusText })
-    return res.status(status).send({
-      status,
-      statusText
-    })
-  }
-})
-
-// Add tracks to playlist
-app.post('/playlists/:id/tracks', isAuthenticated, async (req, res) => {
-  try {
-    const { data } = await axios.post(
-      `${SPOTIFY}/playlists/${req.params.id}/tracks`,
-      {
-        uris: req.body.uris
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${req.user.accessToken}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    )
-    return res.send(data)
-  } catch ({ response }) {
-    const { status, statusText } = response
-    console.error({ status, statusText })
-    return res.status(status).send({
-      status,
-      statusText
-    })
-  }
-})
-
-// Create new playlist
-app.post('/playlists/new', isAuthenticated, async (req, res) => {
-  try {
-    const { data } = await axios.post(`${SPOTIFY}/${req.user.id}/playlists`, {
-      name: req.body.name
-    })
-
-    return res.send(data)
-  } catch (err) {
-    return res.status(err).send(err)
-  }
-})
-
-// Search tracks
-app.post('/search', isAuthenticated, (req, res) => {
-  const { list } = req.body
-
-  const songs = list.split('\n').map(x => x.trim())
-
-  const requests = songs.map(song => {
-    const [artist, track] = song.split(/[-–]/gi)
-
-    return spotify
-      .searchTracks(`artist:${artist.trim()} track:${track.trim()}`)
-      .then(res => {
-        return res.body.tracks.items || res.body.tracks
-      })
-      .catch(err => {
-        console.error('ERROR!', err)
-      })
-  })
-
-  Promise.all(requests)
-    .then(results => {
-      return res.send(results)
-    })
-    .catch(errors => {
-      console.error(errors)
-    })
-})
-
-// Handle React routing, return all requests to React app
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'build', 'index.html'))
-})
+app.use('/api', isAuthenticated, spotifyApi)
 
 app.listen(PORT, err => {
   if (err) console.error(err)
