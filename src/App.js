@@ -289,6 +289,10 @@ class App extends Component {
             )}
 
             <Textarea
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
               placeholder={placeholder}
               value={this.state.value}
               onChange={event =>
