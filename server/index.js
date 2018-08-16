@@ -48,7 +48,7 @@ app.use(cookieParser())
 app.use(bodyParser.json())
 app.use(session({ secret: 'keyboard cat' }))
 
-if (!isProduction) app.use(morgan('tiny'))
+app.use(morgan('tiny'))
 
 if (isProduction) {
   // Serve any static files

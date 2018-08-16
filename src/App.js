@@ -173,23 +173,27 @@ class App extends Component {
   render() {
     const { found, total } = this.state
 
-    const placeholder = [
-      'Paste tracklist here. Each track should be on a separate line:',
-      'Artist - Name',
-      'Artist - Name',
-      'Artist - Name',
-      'Artist - Name',
-      'Artist - Name',
-      'Artist - Name',
-      '',
-      '(You may have to manually tidy some track names to increase accuracy of results)'
-    ].join('\n')
+    const isLoggedIn = typeof this.state.user.id !== 'undefined'
+
+    const placeholder = isLoggedIn
+      ? [
+          'Paste tracklist here. Each track should be on a separate line:',
+          'Artist - Name',
+          'Artist - Name',
+          'Artist - Name',
+          'Artist - Name',
+          'Artist - Name',
+          'Artist - Name',
+          '',
+          '(You may have to manually tidy some track names to increase accuracy of results)'
+        ].join('\n')
+      : ''
 
     return (
       <div>
         <Header>
           <h5>Spotify Tracklist Finder</h5>
-          {this.state.user.id && (
+          {isLoggedIn && (
             <Flex alignItems="center">
               {this.state.user.displayName}
               <Avatar ml={3} src={this.state.user.photos.find(x => x)} />
@@ -230,6 +234,7 @@ class App extends Component {
                   </SpotifyButton>
                 </div>
               </Flex>
+
               {this.state.playlists.map(playlist => (
                 <Playlist key={playlist.id}>
                   <Flex alignItems="center" style={{ overflow: 'hidden' }}>
@@ -256,7 +261,7 @@ class App extends Component {
 
         <Content>
           <LeftPanel>
-            {!this.state.user.id && (
+            {!isLoggedIn && (
               <LoginButton>
                 <SpotifyLink href="/auth/spotify">
                   Login with Spotify
@@ -273,6 +278,7 @@ class App extends Component {
                 })
               }
             />
+
             <ActionsBar>
               <ActionButton secondary onClick={this.removeTrackNumbers}>
                 Remove Track Numbers
