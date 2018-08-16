@@ -1,0 +1,22 @@
+import styled, { keyframes } from 'styled-components'
+
+const spin = keyframes`
+100% {
+  transform: rotate(360deg)
+}
+`
+
+export default styled.div`
+  display: ${p => (p.active ? 'inline-block' : 'none')};
+  position: relative;
+  top: 2px;
+  margin-right: 1em;
+  pointer-events: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-color: transparent;
+  border-top-color: white;
+  border-radius: 50%;
+  animation: ${spin} 650ms linear infinite;
+`

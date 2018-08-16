@@ -4,6 +4,8 @@ import { hot } from 'react-hot-loader'
 import { Flex } from 'grid-styled'
 import { get } from './utils'
 import spotify from './spotify'
+import Spinner from './components/spinner'
+import Indicator from './components/indicator'
 
 import {
   Header,
@@ -16,6 +18,7 @@ import {
   Album,
   Image,
   Input,
+  EmptyState,
   LoginButton,
   SongTitle,
   SongArtist,
@@ -30,8 +33,15 @@ import {
   Backdrop
 } from './styles'
 
+const removeEmptyLines = (x = '') => x.trim().length > 0
+const removeFeatured = x => x.replace(/(feat|ft\.)/gim, '')
+const removeSpecialDashes = x => x.replace(/\u2013|\u2014/gm, '-')
+const removeAmpersands = x => x.trim().replace('&', '')
+const removeBrackets = x => x.replace(/\[.+\]$/gim, '')
+
 class App extends Component {
   state = {
+    init: true,
     value: '',
     user: {},
     results: [],
@@ -40,6 +50,8 @@ class App extends Component {
     playlists: [],
     adding: null,
     added: [],
+    searching: false,
+    fetchingPlaylists: false,
     modalVisible: false,
     createPlaylistInput: ''
   }
@@ -87,19 +99,23 @@ class App extends Component {
   }
 
   getPlaylists = async () => {
+    this.setState({ fetchingPlaylists: true })
     try {
       const { data } = await spotify.getPlaylists()
       this.setState({
         playlists: data.items,
-        modalVisible: true
+        modalVisible: true,
+        fetchingPlaylists: false
       })
     } catch (err) {
       console.error(err)
+      this.setState({ fetchingPlaylists: true })
     }
   }
 
   search = () => {
     const { value } = this.state
+    this.setState({ searching: true })
     spotify
       .search(this.formatQueryForSearch(value))
       .then(({ data }) => {
@@ -109,26 +125,29 @@ class App extends Component {
 
         this.setState({
           results,
-          total: value.split('\n').length,
-          found: results.length
+          total: value.split('\n').filter(removeEmptyLines).length,
+          found: results.length,
+          searching: false
         })
       })
       .catch(err => {
         console.log('Error', err)
+        this.setState({ searching: false })
       })
   }
 
   formatQueryForSearch(query) {
     return query
       .split('\n')
+      .filter(removeEmptyLines)
       .map(
         x =>
           /([0-9]{0,2}[:.]*[0-9]{0,2}[:.]*[0-9]{0,2})?([-\s]*)(.+)/gi.exec(x)[3]
       )
-      .map(x => x.replace(/\[.+\]$/gim, ''))
-      .map(x => x.trim().replace('&', ''))
-      .map(x => x.replace(/\u2013|\u2014/gm, '-'))
-      .map(x => x.replace(/(feat|ft\.)/gim, ''))
+      .map(removeBrackets)
+      .map(removeAmpersands)
+      .map(removeSpecialDashes)
+      .map(removeFeatured)
       .join('\n')
   }
 
@@ -288,13 +307,18 @@ class App extends Component {
                 primary={this.state.value.length > 0}
                 onClick={this.search}
               >
-                Find tracks on Spotify
+                <Spinner active={this.state.searching} />{' '}
+                {this.state.searching
+                  ? 'Searching Spotify...'
+                  : 'Find tracks on Spotify'}
               </ActionButton>
             </ActionsBar>
           </LeftPanel>
 
           <RightPanel>
-            {this.state.results.length > 0 ? (
+            {this.state.searching ? (
+              <Indicator />
+            ) : this.state.results.length > 0 ? (
               <Fragment>
                 <Albums>
                   <h4>
@@ -317,11 +341,33 @@ class App extends Component {
 
                 <ActionsBar>
                   <ActionButton primary onClick={this.getPlaylists}>
-                    Add tracks to playlist
+                    <Spinner active={this.state.fetchingPlaylists} />{' '}
+                    {this.state.fetchingPlaylists
+                      ? 'Fetching playlists...'
+                      : 'Add tracks to playlist'}
                   </ActionButton>
                 </ActionsBar>
               </Fragment>
-            ) : null}
+            ) : (
+              <EmptyState>
+                {this.state.init ? (
+                  <div>
+                    <p>Tracks will appear here</p>
+                    <small>
+                      Get started by pasting a tracklist in the left panel
+                    </small>
+                  </div>
+                ) : (
+                  <div>
+                    <p>No results found.</p>
+                    <small>
+                      Try removing track numbers, album information and special
+                      characters and search again.
+                    </small>
+                  </div>
+                )}
+              </EmptyState>
+            )}
           </RightPanel>
         </Content>
         <Footer>

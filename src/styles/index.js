@@ -88,11 +88,27 @@ export const Textarea = styled.textarea`
 
 export const RightPanel = styled.div`
   display: flex;
+  position: relative;
   flex-direction: column;
   justify-content: space-between;
-  flex: 0 1 50%;
   background: ${p => p.theme.colors.dark};
+  flex: 0 1 50%;
   color: white;
+`
+
+export const EmptyState = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  text-align: center;
+  transform: translate(-50%, -50%);
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: bold;
+  font-size: 14px;
+
+  p {
+    margin-bottom: 1em;
+  }
 `
 
 export const Albums = styled.div`
