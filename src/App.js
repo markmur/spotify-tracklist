@@ -381,7 +381,7 @@ class App extends Component {
             <span>
               Built by{' '}
               <a
-                href="https://twitter.com/markmur"
+                href="https://twitter.com/mrkmur"
                 target="_blank"
                 rel="noopener noreferrer"
               >
