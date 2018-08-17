@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-escape */
 import React, { Fragment, Component } from 'react'
 import GoogleAnalytics from 'react-ga'
 import { hot } from 'react-hot-loader'
