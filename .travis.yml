@@ -4,6 +4,10 @@ env:
 language: node_js
 node_js: 8
 cache: yarn
-script:
-  - yarn
-  - yarn build
+before_deploy: yarn add now
+deploy:
+  - provider: script
+    script: now --token $NOW_TOKEN && now alias --token $NOW_TOKEN && now rm spotify-tracklist --safe --yes --token $NOW_TOKEN
+    skip_cleanup: true
+    on:
+      master: true
