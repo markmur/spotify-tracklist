@@ -1,4 +1,6 @@
 {
+  "name": "spotify-tracklist",
+  "alias": "spotify-tracklist.now.sh",
   "env": {
     "CLIENT_ID": "@spotify_client_id",
     "CLIENT_SECRET": "@spotify_client_secret",
