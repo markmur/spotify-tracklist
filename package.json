@@ -75,6 +75,7 @@
     "prettier": true,
     "space": true,
     "rules": {
+      "no-useless-escape": 0,
       "unicorn/filename-case": 0,
       "unicorn/regex-shorthand": 0,
       "camelcase": [
