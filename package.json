@@ -41,7 +41,7 @@
     "client": "react-scripts start",
     "server:watch": "nodemon server/index.js --watch server",
     "server": "node server/index.js",
-    "deploy": "now --public && now alias $(echo $(pbpaste)) spotify-tracklist && now rm spotify-tracklist --safe",
+    "deploy": "now --public && now alias $(echo $(pbpaste)) spotify-tracklist && now rm spotify-tracklist --safe -y",
     "now-start": "NODE_ENV=production node server/index.js",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
