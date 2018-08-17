@@ -45,7 +45,8 @@
     "now-start": "NODE_ENV=production node server/index.js",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "lint-staged": "lint-staged"
   },
   "devDependencies": {
     "babel-eslint": "^8.2.6",
@@ -90,6 +91,18 @@
     "extends": "xo-react",
     "plugins": [
       "react"
+    ]
+  },
+  "lint-staged" : {
+    "**/*.js": [
+      "prettier --write",
+      "git add",
+      "xo"
+    ]
+  },
+  "precommit": {
+    "run": [
+      "lint-staged"
     ]
   }
 }
