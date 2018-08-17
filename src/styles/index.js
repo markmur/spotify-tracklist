@@ -25,6 +25,8 @@ export const Header = styled.header`
   padding: 1em;
   color: white;
   display: flex;
+  font-size: 13px;
+  font-weight: bold;
   align-items: center;
   justify-content: space-between;
 `

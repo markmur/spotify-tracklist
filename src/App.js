@@ -218,7 +218,7 @@ class App extends Component {
     return (
       <div>
         <Header>
-          <h5>Spotify Tracklist Finder</h5>
+          <h3>Spotify Tracklist Finder</h3>
           {isLoggedIn && (
             <Flex alignItems="center">
               {this.state.user.displayName}
