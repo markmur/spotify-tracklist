@@ -7,7 +7,7 @@ cache: yarn
 before_deploy: yarn add now
 deploy:
   - provider: script
-    script: now --token $NOW_TOKEN && now alias --token $NOW_TOKEN && now rm spotify-tracklist --safe --yes --token $NOW_TOKEN
+    script: now --public --token $NOW_TOKEN && now alias --token $NOW_TOKEN && now rm spotify-tracklist --safe --yes --token $NOW_TOKEN
     skip_cleanup: true
     on:
       master: true
