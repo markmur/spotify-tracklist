@@ -36,10 +36,18 @@ import {
 GoogleAnalytics.initialize('UA-76403737-6')
 
 const removeEmptyLines = (x = '') => x.trim().length > 0
-const removeFeatured = x => x.replace(/(feat|ft\.)/gim, '')
+const removeFeatured = x => x.replace(/(feat|ft)\.?/gim, '')
 const removeSpecialDashes = x => x.replace(/\u2013|\u2014/gm, '-')
 const removeAmpersands = x => x.trim().replace('&', '')
 const removeBrackets = x => x.replace(/\[.+\]$/gim, '')
+
+const captureTrackInformation = x => {
+  const captured = /([\[]?[0-9]{0,2}[:.]*[0-9]{0,2}[:.]*[0-9]{0,2}[\]][\s0-9.]*)?([-\s]*)(.+)/gi.exec(
+    x
+  )
+
+  return captured[3] || ''
+}
 
 class App extends Component {
   state = {
@@ -142,10 +150,7 @@ class App extends Component {
     return query
       .split('\n')
       .filter(removeEmptyLines)
-      .map(
-        x =>
-          /([0-9]{0,2}[:.]*[0-9]{0,2}[:.]*[0-9]{0,2})?([-\s]*)(.+)/gi.exec(x)[3]
-      )
+      .map(captureTrackInformation)
       .map(removeBrackets)
       .map(removeAmpersands)
       .map(removeSpecialDashes)
