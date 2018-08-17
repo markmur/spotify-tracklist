@@ -43,7 +43,7 @@ const removeAmpersands = x => x.trim().replace('&', '')
 const removeBrackets = x => x.replace(/\[.+\]$/gim, '')
 
 const captureTrackInformation = x => {
-  const captured = /([\[]?[0-9]{0,2}[:.]*[0-9]{0,2}[:.]*[0-9]{0,2}[\]][\s0-9.]*)?([-\s]*)(.+)/gi.exec(
+  const captured = /([\[]?[0-9]{0,2}[:.]*[0-9]{0,2}[:.]*[0-9]{0,2}[\]]?[\s0-9.]*)?([-:\s]*)(.+)/gi.exec(
     x
   )
 
