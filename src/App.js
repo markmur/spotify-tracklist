@@ -7,6 +7,7 @@ import { get } from './utils'
 import spotify from './spotify'
 import Spinner from './components/spinner'
 import Indicator from './components/indicator'
+import Icon from './components/icon'
 
 import {
   Header,
@@ -15,8 +16,8 @@ import {
   LeftPanel,
   RightPanel,
   Textarea,
-  Albums,
-  Album,
+  Tracks,
+  Track,
   Image,
   Input,
   EmptyState,
@@ -31,15 +32,18 @@ import {
   Modal,
   Playlists,
   Playlist,
-  Backdrop
+  Backdrop,
+  TrackImage,
+  PlaybackIcon
 } from './styles'
 
 GoogleAnalytics.initialize('UA-76403737-6')
 
+const trimDashes = x => x.replace(/[-]{2,}/gi, '-')
 const removeEmptyLines = (x = '') => x.trim().length > 0
 const removeFeatured = x => x.replace(/(feat|ft)\.?/gim, '')
 const removeSpecialDashes = x => x.replace(/\u2013|\u2014/gm, '-')
-const removeAmpersands = x => x.trim().replace('&', '')
+const removeAmpersands = (x = '') => x.trim().replace('&', '')
 const removeBrackets = x => x.replace(/\[.+\]$/gim, '')
 
 const captureTrackInformation = x => {
@@ -62,24 +66,80 @@ class App extends Component {
     adding: null,
     added: [],
     searching: false,
+    paused: true,
+    currentTrack: {},
     fetchingPlaylists: false,
     modalVisible: false,
     createPlaylistInput: ''
   }
 
   componentDidMount() {
+    this.listeners = []
+
     GoogleAnalytics.pageview(window.location.pathname + window.location.search)
 
     spotify
       .getProfile()
-      .then(({ data }) =>
+      .then(({ data }) => {
         this.setState({
           user: data
         })
-      )
+
+        window.onSpotifyWebPlaybackSDKReady = () => {
+          this.player = new window.Spotify.Player({
+            name: 'Tracklist for Spotify',
+            getOauthToken: cb => cb(data.token)
+          })
+
+          this.connectSpotifyPlayer()
+        }
+      })
       .catch(err => {
         console.error(err)
       })
+  }
+
+  componentWillUnmount() {
+    if (process.env.NODE_ENV === 'production') {
+      if (this.player) this.player.disconnect()
+    }
+
+    this.listeners.map(name => this.player.removeListener(name))
+  }
+
+  connectSpotifyPlayer() {
+    const logError = ({ message }) => {
+      console.error(message)
+    }
+
+    this.addListener('player_state_changed', state => {
+      if (!state) return
+
+      console.log('State changed', state)
+
+      const {
+        paused,
+        track_window: { current_track }
+      } = state
+      this.setState({
+        paused,
+        currentTrack: current_track
+      })
+    })
+
+    this.addListener('initialization_error', logError)
+    this.addListener('authentication_error', logError)
+    this.addListener('account_error', logError)
+    this.addListener('ready', ({ device_id }) => {
+      this.deviceId = device_id
+    })
+
+    this.player.connect()
+  }
+
+  addListener = (name, callback) => {
+    this.listeners.push(name)
+    this.player.addListener(name, callback)
   }
 
   removeTrackNumbers = () => {
@@ -124,6 +184,34 @@ class App extends Component {
     }
   }
 
+  play = async tracks => {
+    if (this.state.currentTrack.uri === tracks[0]) return this.player.resume()
+
+    const { data } = await spotify.getDevices()
+
+    return spotify
+      .play(
+        tracks,
+        get(data, 'device.id', this.deviceId),
+        this.state.user.token
+      )
+      .catch(err => {
+        console.error(err)
+      })
+  }
+
+  playAll = () => {
+    const { results } = this.state
+
+    if (!results || results.length <= 1) return
+
+    return this.play(results.map(x => x.uri))
+  }
+
+  pause = () => {
+    if (this.player) return this.player.pause()
+  }
+
   search = () => {
     const { value } = this.state
     this.setState({ searching: true })
@@ -156,6 +244,7 @@ class App extends Component {
       .map(removeAmpersands)
       .map(removeSpecialDashes)
       .map(removeFeatured)
+      .map(trimDashes)
       .join('\n')
   }
 
@@ -201,6 +290,9 @@ class App extends Component {
     const { found, total } = this.state
 
     const isLoggedIn = typeof this.state.user.id !== 'undefined'
+    const userCanPlay = get(this.state.user, 'product') === 'premium'
+    const hasResults = this.state.results.length > 0
+    const isPlaying = this.state.currentTrack.id !== null && !this.state.paused
 
     const placeholder = isLoggedIn
       ? [
@@ -219,7 +311,7 @@ class App extends Component {
     return (
       <div>
         <Header>
-          <h3>Spotify Tracklist Finder</h3>
+          <h3>Tracklist for Spotify</h3>
           {isLoggedIn && (
             <Flex alignItems="center">
               {this.state.user.displayName}
@@ -332,26 +424,66 @@ class App extends Component {
               <Indicator />
             ) : this.state.results.length > 0 ? (
               <Fragment>
-                <Albums>
+                <Tracks>
                   <h4>
                     Found {found} of {total} on Spotify
                   </h4>
                   {this.state.results.map(
-                    ({ id, title, artist, image, uri }) => (
-                      <Album key={id} href={uri}>
-                        <div>
-                          <Image src={image.url} />
-                        </div>
-                        <div>
-                          <SongTitle>{title}</SongTitle>
-                          <SongArtist>{artist}</SongArtist>
-                        </div>
-                      </Album>
+                    ({ id, title, artist, image, uri }, i) => (
+                      <Track
+                        key={id}
+                        onClick={event => {
+                          event.preventDefault()
+                          event.stopPropagation()
+
+                          if (
+                            this.state.currentTrack.id === id &&
+                            !this.state.paused
+                          ) {
+                            return this.pause()
+                          }
+
+                          this.play(this.state.results.slice(i).map(x => x.uri))
+                        }}
+                      >
+                        <Flex>
+                          <TrackImage>
+                            <Image src={image.url} />
+                            <PlaybackIcon
+                              isPlaying={this.state.currentTrack.id === id}
+                            >
+                              {this.state.currentTrack.id === id ? (
+                                this.state.paused ? (
+                                  '▶'
+                                ) : (
+                                  <Icon type="controller-paus" />
+                                )
+                              ) : null}
+                            </PlaybackIcon>
+                          </TrackImage>
+                          <div>
+                            <SongTitle>{title}</SongTitle>
+                            <SongArtist>{artist}</SongArtist>
+                          </div>
+                        </Flex>
+                        <a href={uri}>
+                          <Icon color="spotify" fontSize={22} type="spotify" />
+                        </a>
+                      </Track>
                     )
                   )}
-                </Albums>
+                </Tracks>
 
                 <ActionsBar>
+                  {hasResults &&
+                    userCanPlay && (
+                      <ActionButton
+                        secondary
+                        onClick={isPlaying ? this.pause : this.playAll}
+                      >
+                        {isPlaying ? '❚❚ Pause' : '▶ Play all'}
+                      </ActionButton>
+                    )}
                   <ActionButton primary onClick={this.getPlaylists}>
                     <Spinner active={this.state.fetchingPlaylists} />{' '}
                     {this.state.fetchingPlaylists

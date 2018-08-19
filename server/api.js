@@ -14,8 +14,71 @@ const router = express.Router() // eslint-disable-line new-cap
 
 const SPOTIFY = 'https://api.spotify.com/v1'
 
+router.put('/track/play', async (req, res) => {
+  const { device, uri, token } = req.body
+
+  if (!device) {
+    return res.status(400).send({
+      message: '`device` body parameter is required'
+    })
+  }
+
+  if (!uri) {
+    return res.status(400).send({
+      message: '`uri` body parameter is required'
+    })
+  }
+
+  if (!token) {
+    return res.status(400).send({
+      message: '`token` body parameter is required'
+    })
+  }
+
+  try {
+    const { data } = await axios.put(
+      `${SPOTIFY}/me/player/play?device_id=${device}`,
+      {
+        uris: [uri]
+      },
+      {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    )
+
+    return res.send(data)
+  } catch (err) {
+    console.log(err)
+    return res.status(400).send()
+  }
+})
+
 // Return user profile
-router.get('/profile', (req, res) => res.send(req.user.profile))
+router.get('/profile', (req, res) =>
+  res.send(
+    Object.assign({}, req.user.profile, {
+      token: req.user.token.accessToken
+    })
+  )
+)
+
+router.get('/devices', async (req, res) => {
+  try {
+    const { data } = await axios.request({
+      url: `${SPOTIFY}/me/player`,
+      headers: {
+        Authorization: `Bearer ${req.user.token.accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    })
+
+    return res.json(data)
+  } catch (err) {
+    console.log(err)
+    return res.status(400).send()
+  }
+})
 
 // Fetch playlists
 router.get('/playlists', async (req, res) => {

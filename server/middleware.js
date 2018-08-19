@@ -3,6 +3,8 @@ const isAuthenticated = (req, res, next) => {
     return next()
   }
 
+  console.log('Not authenticated', req.user)
+
   res.status(401).send()
 }
 

@@ -84,12 +84,7 @@
       "unicorn/filename-case": 0,
       "unicorn/regex-shorthand": 0,
       "import/no-unassigned-import": 0,
-      "camelcase": [
-        2,
-        {
-          "properties": "never"
-        }
-      ]
+      "camelcase": 0
     },
     "extends": "xo-react",
     "plugins": [
