@@ -41,7 +41,6 @@ const refreshAccessToken = async req => {
 
 const isAuthenticated = async (req, res, next) => {
   if (req.isAuthenticated()) {
-    await refreshAccessToken(req)
     return next()
   }
 
