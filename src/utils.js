@@ -1,4 +1,4 @@
-export const get = (obj, key, fallback) => {
+const get = (obj, key, fallback) => {
   if (!obj) return fallback
 
   return (
@@ -7,4 +7,8 @@ export const get = (obj, key, fallback) => {
       .reduce((state, x) => (state && state[x] ? state[x] : null), obj) ||
     fallback
   )
+}
+
+module.exports = {
+  get
 }
