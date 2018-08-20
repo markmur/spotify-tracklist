@@ -189,14 +189,8 @@ class App extends Component {
   play = async tracks => {
     if (this.state.currentTrack.uri === tracks[0]) return this.player.resume()
 
-    const { data } = await spotify.getDevices()
-
     return spotify
-      .play(
-        tracks,
-        get(data, 'device.id', this.deviceId),
-        this.state.user.token
-      )
+      .play(tracks, this.deviceId, this.state.user.token)
       .catch(err => {
         console.error(err)
       })
