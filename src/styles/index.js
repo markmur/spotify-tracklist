@@ -1,4 +1,5 @@
 import styled from 'styled-components'
+import { Flex } from 'grid-styled'
 import { lighten } from 'polished'
 import { space } from 'styled-system'
 
@@ -6,6 +7,32 @@ const color = color => p => p.theme.colors[color]
 
 export const Label = styled.label`
   display: block;
+`
+
+export const TrackImage = styled.div`
+  position: relative;
+  margin-right: 1em;
+  height: 40px;
+  width: 40px;
+  flex-shrink: 0;
+`
+
+export const PlaybackIcon = styled.div`
+  visibility: hidden;
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  justify-content: center;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  color: white;
+  background: rgba(0, 0, 0, 0.7);
+
+  ${p => p.isPlaying && `visibility: visible`};
 `
 
 export const Input = styled.input`
@@ -39,10 +66,9 @@ export const Footer = styled.footer`
   height: 56px;
   background: ${color('footer')};
   padding: 1em 2em;
-  color: white;
+  color: rgba(255, 255, 255, 0.7);
   font-size: 13px;
   text-align: center;
-  color: ${p => lighten(0.2, p.theme.colors.light)};
 
   strong {
     margin: 0 1em;
@@ -113,26 +139,29 @@ export const EmptyState = styled.div`
   }
 `
 
-export const Albums = styled.div`
+export const Tracks = styled.div`
   padding: 1em 2em 2em;
   flex: 1;
   overflow: auto;
   max-height: calc(100vh - 56px - 56px);
 `
 
-export const Album = styled.a`
+export const Track = styled.div`
   display: flex;
+  justify-content: space-between;
   padding: 0.75em 1em;
   border-radius: 4px;
+  align-items: center;
+  cursor: pointer;
   border-bottom: 1px solid ${color('border')};
 
   &:hover {
     background: rgba(255, 255, 255, 0.05);
     border-bottom-color: transparent;
-  }
 
-  img {
-    margin-right: 1em;
+    .playback-icon {
+      visibility: visible;
+    }
   }
 `
 
@@ -159,10 +188,10 @@ export const SongArtist = styled.small`
   font-size: 12px;
 `
 
-export const ActionsBar = styled.div`
+export const ActionsBar = styled(Flex).attrs({
+  justifyContent: 'flex-end'
+})`
   background: ${color('light')};
-  display: flex;
-  justify-content: flex-end;
 `
 
 export const LoginButton = styled.div`
@@ -199,6 +228,11 @@ export const ActionButton = styled.button`
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 1px;
+
+  i {
+    position: relative;
+    top: 1px;
+  }
 
   ${primary};
   ${secondary};

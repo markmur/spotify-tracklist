@@ -15,7 +15,39 @@ const router = express.Router() // eslint-disable-line new-cap
 const SPOTIFY = 'https://api.spotify.com/v1'
 
 // Return user profile
-router.get('/profile', (req, res) => res.send(req.user.profile))
+router.get('/profile', async (req, res) => {
+  try {
+    const { data } = await axios.request({
+      url: `${SPOTIFY}/me`,
+      headers: {
+        Authorization: `Bearer ${req.user.token.accessToken}`
+      }
+    })
+
+    return res.send({
+      ...data,
+      token: req.user.token.accessToken
+    })
+  } catch (err) {
+    return res.status(401).send()
+  }
+})
+
+router.get('/devices', async (req, res) => {
+  try {
+    const { data } = await axios.request({
+      url: `${SPOTIFY}/me/player`,
+      headers: {
+        Authorization: `Bearer ${req.user.token.accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    })
+
+    return res.json(data)
+  } catch (err) {
+    return res.status(400).send()
+  }
+})
 
 // Fetch playlists
 router.get('/playlists', async (req, res) => {
@@ -28,7 +60,6 @@ router.get('/playlists', async (req, res) => {
     return res.send(data)
   } catch ({ response }) {
     const { status, statusText } = response
-    console.error({ status, statusText })
     return res.status(status).send({
       status,
       statusText
@@ -54,7 +85,6 @@ router.post('/playlists/:id/tracks', async (req, res) => {
     return res.send(data)
   } catch ({ response }) {
     const { status, statusText } = response
-    console.error({ status, statusText })
     return res.status(status).send({
       status,
       statusText
@@ -87,7 +117,6 @@ router.post('/playlists/new', async (req, res) => {
     return res.send(data)
   } catch ({ response }) {
     const { status, statusText } = response
-    console.error({ status, statusText })
     return res.status(status).send({
       status,
       statusText
