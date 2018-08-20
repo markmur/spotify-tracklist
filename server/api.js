@@ -55,13 +55,27 @@ router.put('/track/play', async (req, res) => {
 })
 
 // Return user profile
-router.get('/profile', (req, res) =>
-  res.send(
-    Object.assign({}, req.user.profile, {
+router.get('/profile', async (req, res) => {
+  try {
+    const { data } = await axios.request({
+      url: `${SPOTIFY}/me`,
+      headers: {
+        Authorization: `Bearer ${req.user.token.accessToken}`
+      }
+    })
+
+    console.log(data)
+
+    return res.send({
+      ...data,
       token: req.user.token.accessToken
     })
-  )
-)
+  } catch (err) {
+    console.log(err)
+    console.log('Has refresh token?', req.user.token)
+    return res.status(401).send()
+  }
+})
 
 router.get('/devices', async (req, res) => {
   try {

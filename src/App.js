@@ -94,9 +94,7 @@ class App extends Component {
           this.connectSpotifyPlayer()
         }
       })
-      .catch(err => {
-        console.error(err)
-      })
+      .catch(console.warn)
   }
 
   componentWillUnmount() {
@@ -113,9 +111,13 @@ class App extends Component {
     }
 
     this.addListener('player_state_changed', state => {
-      if (!state) return
-
-      console.log('State changed', state)
+      if (!state) {
+        this.setState({
+          currentTrack: {},
+          paused: null
+        })
+        return
+      }
 
       const {
         paused,
@@ -137,7 +139,7 @@ class App extends Component {
     this.player.connect()
   }
 
-  addListener = (name, callback) => {
+  addListener(name, callback) {
     this.listeners.push(name)
     this.player.addListener(name, callback)
   }
@@ -200,11 +202,41 @@ class App extends Component {
       })
   }
 
-  playAll = () => {
+  playTrack = (id, index, uri) => event => {
+    event.preventDefault()
+    event.stopPropagation()
+
+    const userHasPremium = get(this.state.user, 'product') === 'premium'
+
+    if (!userHasPremium) {
+      window.location.href = uri
+      return
+    }
+
     const { results } = this.state
 
-    if (!results || results.length <= 1) return
+    // If track is currently playing, then pause it
+    if (this.state.currentTrack.id === id && !this.state.paused) {
+      return this.pause()
+    }
 
+    // Play all from track index onwards
+    this.play(results.slice(index).map(x => x.uri))
+  }
+
+  playAll = () => {
+    const { results, currentTrack, paused } = this.state
+
+    // If there's a track in state already, then resume
+    if (typeof currentTrack.id !== 'undefined' && paused) {
+      this.player.resume()
+      return
+    }
+
+    // Ignore the play button if no results
+    if (!results || results.length <= 0) return
+
+    // Play all tracks
     return this.play(results.map(x => x.uri))
   }
 
@@ -219,7 +251,7 @@ class App extends Component {
       .search(this.formatQueryForSearch(value))
       .then(({ data }) => {
         const results = data
-          .filter(x => x.length)
+          .filter(x => x && x.length)
           .map(x => this.getTrackInformation(x[0]))
 
         this.setState({
@@ -314,8 +346,8 @@ class App extends Component {
           <h3>Tracklist for Spotify</h3>
           {isLoggedIn && (
             <Flex alignItems="center">
-              {this.state.user.displayName}
-              <Avatar ml={3} src={this.state.user.photos.find(x => x)} />
+              {this.state.user.display_name}
+              <Avatar ml={3} src={this.state.user.images.find(x => x).url} />
             </Flex>
           )}
         </Header>
@@ -430,35 +462,23 @@ class App extends Component {
                   </h4>
                   {this.state.results.map(
                     ({ id, title, artist, image, uri }, i) => (
-                      <Track
-                        key={id}
-                        onClick={event => {
-                          event.preventDefault()
-                          event.stopPropagation()
-
-                          if (
-                            this.state.currentTrack.id === id &&
-                            !this.state.paused
-                          ) {
-                            return this.pause()
-                          }
-
-                          this.play(this.state.results.slice(i).map(x => x.uri))
-                        }}
-                      >
+                      <Track key={id} onClick={this.playTrack(id, i, uri)}>
                         <Flex>
                           <TrackImage>
                             <Image src={image.url} />
                             <PlaybackIcon
+                              className="playback-icon"
                               isPlaying={this.state.currentTrack.id === id}
                             >
                               {this.state.currentTrack.id === id ? (
                                 this.state.paused ? (
                                   '▶'
                                 ) : (
-                                  <Icon type="controller-paus" />
+                                  <Icon type="pause" />
                                 )
-                              ) : null}
+                              ) : (
+                                '▶'
+                              )}
                             </PlaybackIcon>
                           </TrackImage>
                           <div>
@@ -466,8 +486,20 @@ class App extends Component {
                             <SongArtist>{artist}</SongArtist>
                           </div>
                         </Flex>
-                        <a href={uri}>
-                          <Icon color="spotify" fontSize={22} type="spotify" />
+                        <a
+                          type="button"
+                          onClick={event => {
+                            event.preventDefault()
+                            event.stopPropagation()
+                            window.location.href = uri
+                          }}
+                        >
+                          <Icon
+                            color="#b7b7b7"
+                            hoverColor="spotify"
+                            fontSize={22}
+                            type="spotify"
+                          />
                         </a>
                       </Track>
                     )
@@ -481,14 +513,25 @@ class App extends Component {
                         secondary
                         onClick={isPlaying ? this.pause : this.playAll}
                       >
-                        {isPlaying ? '❚❚ Pause' : '▶ Play all'}
+                        {isPlaying ? (
+                          <span>
+                            <Icon type="pause" /> Pause
+                          </span>
+                        ) : (
+                          '▶ Play'
+                        )}
                       </ActionButton>
                     )}
                   <ActionButton primary onClick={this.getPlaylists}>
                     <Spinner active={this.state.fetchingPlaylists} />{' '}
-                    {this.state.fetchingPlaylists
-                      ? 'Fetching playlists...'
-                      : 'Add tracks to playlist'}
+                    {this.state.fetchingPlaylists ? (
+                      'Fetching playlists...'
+                    ) : (
+                      <span>
+                        <Icon mr={2} type="add-to-list" />
+                        Add to playlist
+                      </span>
+                    )}
                   </ActionButton>
                 </ActionsBar>
               </Fragment>

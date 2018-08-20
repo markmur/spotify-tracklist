@@ -12,9 +12,13 @@ export const Label = styled.label`
 export const TrackImage = styled.div`
   position: relative;
   margin-right: 1em;
+  height: 40px;
+  width: 40px;
+  flex-shrink: 0;
 `
 
 export const PlaybackIcon = styled.div`
+  visibility: hidden;
   position: absolute;
   display: flex;
   flex-direction: column;
@@ -26,7 +30,9 @@ export const PlaybackIcon = styled.div`
   width: 100%;
   height: 100%;
   color: white;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.7);
+
+  ${p => p.isPlaying && `visibility: visible`};
 `
 
 export const Input = styled.input`
@@ -140,7 +146,7 @@ export const Tracks = styled.div`
   max-height: calc(100vh - 56px - 56px);
 `
 
-export const Track = styled.a`
+export const Track = styled.div`
   display: flex;
   justify-content: space-between;
   padding: 0.75em 1em;
@@ -152,6 +158,10 @@ export const Track = styled.a`
   &:hover {
     background: rgba(255, 255, 255, 0.05);
     border-bottom-color: transparent;
+
+    .playback-icon {
+      visibility: visible;
+    }
   }
 `
 
@@ -218,6 +228,11 @@ export const ActionButton = styled.button`
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 1px;
+
+  i {
+    position: relative;
+    top: 1px;
+  }
 
   ${primary};
   ${secondary};

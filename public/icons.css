@@ -29,7 +29,7 @@
 .icon-classic-computer:before {
   content: '\e901';
 }
-.icon-controller-fast-backward:before {
+.icon-rewind:before {
   content: '\e902';
 }
 .icon-creative-commons-attribution:before {
@@ -173,28 +173,28 @@
 .icon-cloud:before {
   content: '\e931';
 }
-.icon-controller-fast-forward:before {
+.icon-fast-forward:before {
   content: '\e932';
 }
-.icon-controller-jump-to-start:before {
+.icon-back-to-start:before {
   content: '\e933';
 }
-.icon-controller-next:before {
+.icon-next:before {
   content: '\e934';
 }
-.icon-controller-paus:before {
+.icon-pause:before {
   content: '\e935';
 }
-.icon-controller-play:before {
+.icon-play:before {
   content: '\e936';
 }
-.icon-controller-record:before {
+.icon-record:before {
   content: '\e937';
 }
-.icon-controller-stop:before {
+.icon-stop:before {
   content: '\e938';
 }
-.icon-controller-volume:before {
+.icon-volume:before {
   content: '\e939';
 }
 .icon-dot-single:before {
