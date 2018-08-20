@@ -14,46 +14,6 @@ const router = express.Router() // eslint-disable-line new-cap
 
 const SPOTIFY = 'https://api.spotify.com/v1'
 
-router.put('/track/play', async (req, res) => {
-  const { device, uri, token } = req.body
-
-  if (!device) {
-    return res.status(400).send({
-      message: '`device` body parameter is required'
-    })
-  }
-
-  if (!uri) {
-    return res.status(400).send({
-      message: '`uri` body parameter is required'
-    })
-  }
-
-  if (!token) {
-    return res.status(400).send({
-      message: '`token` body parameter is required'
-    })
-  }
-
-  try {
-    const { data } = await axios.put(
-      `${SPOTIFY}/me/player/play?device_id=${device}`,
-      {
-        uris: [uri]
-      },
-      {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    )
-
-    return res.send(data)
-  } catch (err) {
-    console.log(err)
-    return res.status(400).send()
-  }
-})
-
 // Return user profile
 router.get('/profile', async (req, res) => {
   try {
@@ -64,15 +24,11 @@ router.get('/profile', async (req, res) => {
       }
     })
 
-    console.log(data)
-
     return res.send({
       ...data,
       token: req.user.token.accessToken
     })
   } catch (err) {
-    console.log(err)
-    console.log('Has refresh token?', req.user.token)
     return res.status(401).send()
   }
 })
@@ -89,7 +45,6 @@ router.get('/devices', async (req, res) => {
 
     return res.json(data)
   } catch (err) {
-    console.log(err)
     return res.status(400).send()
   }
 })
@@ -105,7 +60,6 @@ router.get('/playlists', async (req, res) => {
     return res.send(data)
   } catch ({ response }) {
     const { status, statusText } = response
-    console.error({ status, statusText })
     return res.status(status).send({
       status,
       statusText
@@ -131,7 +85,6 @@ router.post('/playlists/:id/tracks', async (req, res) => {
     return res.send(data)
   } catch ({ response }) {
     const { status, statusText } = response
-    console.error({ status, statusText })
     return res.status(status).send({
       status,
       statusText
@@ -164,7 +117,6 @@ router.post('/playlists/new', async (req, res) => {
     return res.send(data)
   } catch ({ response }) {
     const { status, statusText } = response
-    console.error({ status, statusText })
     return res.status(status).send({
       status,
       statusText
