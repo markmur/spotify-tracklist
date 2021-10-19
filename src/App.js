@@ -4,6 +4,7 @@ import GoogleAnalytics from 'react-ga'
 import { get } from './utils'
 import spotify from './spotify'
 import Spinner from './components/spinner'
+import Meta from './components/meta'
 import Indicator from './components/indicator'
 import Footer from './components/footer'
 import Header from './components/header'
@@ -332,12 +333,14 @@ class App extends Component {
           'Artist - Name',
           'Artist - Name',
           '',
-          '(You may have to manually tidy some track names to increase accuracy of results)'
+          '(You may have to manually tidy some track names to increase the accuracy of the search results)'
         ].join('\n')
       : ''
 
     return (
       <div>
+        <Meta />
+
         <Header user={user} />
 
         <PlaylistModal
