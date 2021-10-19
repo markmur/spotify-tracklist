@@ -80,24 +80,24 @@ class App extends Component {
           user: data
         })
 
-        window.onSpotifyWebPlaybackSDKReady = () => {
-          this.player = new window.Spotify.Player({
-            name: 'Tracklist for Spotify',
-            getOauthToken: cb => cb(data.token)
-          })
+        // window.onSpotifyWebPlaybackSDKReady = () => {
+        //   this.player = new window.Spotify.Player({
+        //     name: 'Tracklist for Spotify',
+        //     getOauthToken: cb => cb(data.token)
+        //   })
 
-          this.connectSpotifyPlayer()
-        }
+        //   this.connectSpotifyPlayer()
+        // }
       })
       .catch(console.warn)
   }
 
   componentWillUnmount() {
     if (process.env.NODE_ENV === 'production') {
-      if (this.player) this.player.disconnect()
+      if (this.player) this.player?.disconnect()
     }
 
-    this.listeners.map(name => this.player.removeListener(name))
+    this.listeners.map(name => this.player?.removeListener(name))
   }
 
   connectSpotifyPlayer() {
@@ -131,12 +131,12 @@ class App extends Component {
       this.deviceId = device_id
     })
 
-    this.player.connect()
+    if (this.player) this.player?.connect()
   }
 
   addListener(name, callback) {
     this.listeners.push(name)
-    this.player.addListener(name, callback)
+    if (this.player) this.player?.addListener(name, callback)
   }
 
   removeTrackNumbers = () => {
@@ -179,7 +179,7 @@ class App extends Component {
   }
 
   play = async tracks => {
-    if (this.state.currentTrack.uri === tracks[0]) return this.player.resume()
+    if (this.state.currentTrack.uri === tracks[0]) return this.player?.resume()
 
     return spotify
       .play(tracks, this.deviceId, this.state.user.token)
@@ -216,7 +216,7 @@ class App extends Component {
 
     // If there's a track in state already, then resume
     if (typeof currentTrack.id !== 'undefined' && paused) {
-      this.player.resume()
+      this.player?.resume()
       return
     }
 
@@ -228,7 +228,7 @@ class App extends Component {
   }
 
   pause = () => {
-    if (this.player) return this.player.pause()
+    if (this.player) return this.player?.pause()
   }
 
   search = () => {
