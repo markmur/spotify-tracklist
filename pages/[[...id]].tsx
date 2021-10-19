@@ -31,7 +31,7 @@ const hasInvalidCharacters = (str: string): boolean => {
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
   try {
     const cookies = getCookies(req)
-    const session = getSessionCookie(cookies)
+    const session = await getSessionCookie(cookies)
 
     return {
       props: {

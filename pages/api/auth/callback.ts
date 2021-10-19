@@ -42,7 +42,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       }
     }
 
-    setAuthCookie(res, session, {
+    await setAuthCookie(res, session, {
       maxAge: data.expires_in * 1000
     })
 

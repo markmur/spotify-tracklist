@@ -1,8 +1,9 @@
 import axios from 'axios'
+import Iron from '@hapi/iron'
 import querystring from 'querystring'
 import jwt, { JwtPayload } from 'jsonwebtoken'
 import { serialize, CookieSerializeOptions } from 'cookie'
-import { NextApiRequest, NextApiResponse, NextApiHandler } from 'next'
+import { NextApiRequest, NextApiResponse } from 'next'
 
 const { SESSION_SECRET } = process.env
 
@@ -10,7 +11,7 @@ const { SESSION_SECRET } = process.env
  * This sets `cookie` using the `res` object
  */
 
-export const setAuthCookie = (
+export const setAuthCookie = async (
   res: NextApiResponse,
   session: JwtPayload,
   options: CookieSerializeOptions = {}
@@ -24,33 +25,42 @@ export const setAuthCookie = (
   }
   const opts: CookieSerializeOptions = { ...defaults, ...options }
 
-  const signedSession = jwt.sign(session, SESSION_SECRET)
+  try {
+    const signedSession = await Iron.seal(
+      session,
+      SESSION_SECRET,
+      Iron.defaults
+    )
 
-  const stringValue =
-    typeof signedSession === 'object'
-      ? 'j:' + JSON.stringify(signedSession)
-      : String(signedSession)
+    const stringValue =
+      typeof signedSession === 'object'
+        ? 'j:' + JSON.stringify(signedSession)
+        : String(signedSession)
 
-  if ('maxAge' in opts) {
-    opts.expires = new Date(Date.now() + opts.maxAge)
-    opts.maxAge /= 1000
+    if ('maxAge' in opts) {
+      opts.expires = new Date(Date.now() + opts.maxAge)
+      opts.maxAge /= 1000
+    }
+
+    res.setHeader(
+      'Set-Cookie',
+      serialize('spotify-tracklist.session', stringValue, opts)
+    )
+  } catch (error) {
+    console.error('Failed to seal session object', error)
+    return
   }
-
-  res.setHeader(
-    'Set-Cookie',
-    serialize('spotify-tracklist.session', stringValue, opts)
-  )
 }
 
-export const getSessionCookie = (
+export const getSessionCookie = async (
   cookies: Record<string, string>
-): JwtPayload => {
+): Promise<UserSession> => {
   if (!cookies['spotify-tracklist.session']) {
     throw new Error('Auth session not found')
   }
 
   const cookie = cookies['spotify-tracklist.session']
-  const decoded = jwt.verify(cookie, SESSION_SECRET) as JwtPayload
+  const decoded = await Iron.unseal(cookie, SESSION_SECRET, Iron.defaults)
 
   return decoded
 }
@@ -60,7 +70,7 @@ export const getAuthToken = async (
   res: NextApiResponse
 ) => {
   try {
-    const session = getSessionCookie(req.cookies)
+    const session = await getSessionCookie(req.cookies)
 
     return session.token.access_token
   } catch {
@@ -93,7 +103,7 @@ export const withAuthSession = fn => async (
   res: NextApiResponse
 ) => {
   try {
-    const session = getSessionCookie(req.cookies) as UserSession
+    const session = (await getSessionCookie(req.cookies)) as UserSession
 
     req.session = session
 
@@ -106,9 +116,12 @@ export const withAuthSession = fn => async (
   }
 }
 
-export const getRefreshToken = (req: NextApiRequest, res: NextApiResponse) => {
+export const getRefreshToken = async (
+  req: NextApiRequest,
+  res: NextApiResponse
+) => {
   try {
-    const session = getSessionCookie(req.cookies)
+    const session = await getSessionCookie(req.cookies)
 
     return session.token.refresh_token
   } catch {
@@ -117,9 +130,9 @@ export const getRefreshToken = (req: NextApiRequest, res: NextApiResponse) => {
   }
 }
 
-export const getUser = (req: NextApiRequest) => {
+export const getUser = async (req: NextApiRequest) => {
   try {
-    const session = getSessionCookie(req.cookies)
+    const session = await getSessionCookie(req.cookies)
 
     return session.user
   } catch {

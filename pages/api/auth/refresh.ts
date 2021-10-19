@@ -10,7 +10,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
   let session
 
   try {
-    session = getSessionCookie(req.cookies)
+    session = await getSessionCookie(req.cookies)
 
     if (!session.token.refresh_token) {
       throw new Error("'refresh_token' missing from session")
@@ -27,7 +27,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       token: response.data
     }
 
-    setAuthCookie(res, newSession, {
+    await setAuthCookie(res, newSession, {
       maxAge: response.data.expires_in * 1000
     })
 

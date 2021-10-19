@@ -3,7 +3,7 @@ import { getSessionCookie } from './../../../utils/cookies'
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   try {
-    const session = getSessionCookie(req.cookies)
+    const session = await getSessionCookie(req.cookies)
 
     res.send({
       ...session.user
