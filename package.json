@@ -2,69 +2,65 @@
   "name": "spotify-tracklist",
   "version": "0.1.0",
   "private": true,
-  "proxy": {
-    "/auth/*": {
-      "target": "http://localhost:8080"
-    },
-    "/api/*": {
-      "target": "http://localhost:8080"
-    }
-  },
   "homepage": "https://spotify-tracklist.now.sh",
+  "engines": {
+    "node": ">= 14"
+  },
   "dependencies": {
     "axios": "^0.18.0",
     "body-parser": "^1.18.3",
     "consolidate": "^0.15.1",
+    "cookie": "^0.4.1",
     "cookie-parser": "^1.4.3",
     "express": "^4.16.3",
     "express-session": "^1.15.6",
     "grid-styled": "^5.0.2",
+    "jsonwebtoken": "^8.5.1",
     "method-override": "^3.0.0",
     "morgan": "^1.9.0",
+    "next": "^10.0.3",
     "now-env": "^3.1.0",
     "passport": "^0.4.0",
     "passport-spotify": "^1.0.1",
     "polished": "^1.9.3",
     "qs": "^6.5.2",
-    "react": "^16.4.2",
-    "react-dom": "^16.4.2",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
     "react-ga": "^2.5.3",
-    "react-hot-loader": "^4.3.4",
     "react-router-dom": "^4.3.1",
     "react-scripts": "1.1.4",
     "spotify-web-api-node": "^3.1.1",
-    "styled-components": "^3.4.2",
+    "styled-components": "^5.2.1",
     "styled-system": "^3.0.2",
     "swig": "^1.4.2"
   },
   "scripts": {
-    "start": "concurrently \"yarn server:watch\" \"yarn client\"",
-    "client": "react-scripts start",
-    "server:watch": "nodemon server/index.js --watch server",
-    "server": "node server/index.js",
+    "dev": "next",
+    "build": "next build",
     "deploy": "now --public && now alias && now rm spotify-tracklist --safe -y",
-    "now-start": "NODE_ENV=production node server/index.js",
-    "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject",
+    "start": "next start",
     "lint-staged": "lint-staged"
   },
   "devDependencies": {
+    "@types/cookie": "^0.4.1",
+    "@types/jsonwebtoken": "^8.5.5",
+    "@types/node": "^16.11.0",
+    "@types/react": "^17.0.0",
+    "@types/spotify-web-api-node": "^4.0.2",
+    "@types/styled-components": "^5.1.4",
     "babel-eslint": "^8.2.6",
     "concurrently": "^3.6.1",
-    "eslint": "^5.3.0",
+    "eslint": "^8.0.1",
     "eslint-config-import": "^0.13.0",
-    "eslint-config-prettier": "^3.0.1",
-    "eslint-config-xo": "^0.24.1",
-    "eslint-config-xo-react": "^0.17.0",
-    "eslint-plugin-import": "^2.14.0",
-    "eslint-plugin-react": "^7.10.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.25.2",
+    "eslint-plugin-react": "^7.26.1",
     "lint-staged": "^7.2.2",
     "node-debug": "^0.1.0",
     "pre-commit": "^1.2.2",
     "prettier": "^1.14.2",
     "prettier-eslint": "^8.8.2",
-    "xo": "^0.22.0"
+    "typescript": "^4.4.4"
   },
   "prettier": {
     "semi": false,
@@ -72,31 +68,10 @@
     "trailingComma": "none",
     "bracketSpacing": true
   },
-  "xo": {
-    "parser": "babel-eslint",
-    "envs": [
-      "browser",
-      "node"
-    ],
-    "prettier": true,
-    "space": true,
-    "rules": {
-      "no-useless-escape": 0,
-      "unicorn/filename-case": 0,
-      "unicorn/regex-shorthand": 0,
-      "import/no-unassigned-import": 0,
-      "camelcase": 0
-    },
-    "extends": "xo-react",
-    "plugins": [
-      "react"
-    ]
-  },
   "lint-staged": {
     "**/*.js": [
       "prettier --write",
-      "git add",
-      "xo"
+      "git add"
     ]
   },
   "precommit": {

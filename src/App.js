@@ -1,40 +1,27 @@
-/* eslint-disable no-useless-escape */
 import React, { Fragment, Component } from 'react'
 import GoogleAnalytics from 'react-ga'
-import { hot } from 'react-hot-loader'
-import { Flex } from 'grid-styled'
+
 import { get } from './utils'
 import spotify from './spotify'
 import Spinner from './components/spinner'
 import Indicator from './components/indicator'
-import Icon from './components/icon'
+import Footer from './components/footer'
+import Header from './components/header'
+import PlaylistModal from './components/modals/playlists'
+import ActionsBar from './components/actions-bar'
+import Tracklist from './components/tracklist'
 
 import {
-  Header,
-  Footer,
+  Box,
+  Flex,
   Content,
   LeftPanel,
   RightPanel,
   Textarea,
-  Tracks,
-  Track,
-  Image,
-  Input,
   EmptyState,
   LoginButton,
-  SongTitle,
-  SongArtist,
-  ActionsBar,
   ActionButton,
-  SpotifyButton,
-  SpotifyLink,
-  Avatar,
-  Modal,
-  Playlists,
-  Playlist,
-  Backdrop,
-  TrackImage,
-  PlaybackIcon
+  SpotifyLink
 } from './styles'
 
 GoogleAnalytics.initialize('UA-76403737-6')
@@ -54,10 +41,18 @@ const captureTrackInformation = x => {
   return captured[3] || ''
 }
 
+const handleAuthExpiry = error => {
+  if (error.response.status === 401) {
+    window.location.assign('/api/auth/refresh')
+  }
+
+  throw error
+}
+
 class App extends Component {
   state = {
     init: true,
-    value: '',
+    value: this.props.initialValue,
     user: {},
     results: [],
     total: 0,
@@ -150,13 +145,8 @@ class App extends Component {
     }))
   }
 
-  createPlaylist = async name => {
-    try {
-      const playlist = await spotify.createPlaylist(name)
-      console.log(playlist)
-    } catch (err) {
-      console.error(err)
-    }
+  createPlaylist = name => {
+    return spotify.createPlaylist(name).catch(handleAuthExpiry)
   }
 
   addTracksToPlaylist = async (id, tracks) => {
@@ -165,9 +155,10 @@ class App extends Component {
       await spotify.addTracksToPlaylist(id, tracks)
       this.setState(state => ({ adding: null, added: [...state.added, id] }))
       this.getPlaylists()
-    } catch (err) {
-      console.error(err)
+    } catch (error) {
+      console.error(error)
       this.setState({ adding: null })
+      handleAuthExpiry(error)
     }
   }
 
@@ -180,9 +171,10 @@ class App extends Component {
         modalVisible: true,
         fetchingPlaylists: false
       })
-    } catch (err) {
-      console.error(err)
+    } catch (error) {
+      console.error(error)
       this.setState({ fetchingPlaylists: true })
+      handleAuthExpiry(error)
     }
   }
 
@@ -191,8 +183,9 @@ class App extends Component {
 
     return spotify
       .play(tracks, this.deviceId, this.state.user.token)
-      .catch(err => {
-        console.error(err)
+      .catch(error => {
+        console.error(error)
+        handleAuthExpiry(error)
       })
   }
 
@@ -240,7 +233,13 @@ class App extends Component {
 
   search = () => {
     const { value } = this.state
+
     this.setState({ searching: true })
+
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('spotify-tracklist.last-search', value)
+    }
+
     spotify
       .search(this.formatQueryForSearch(value))
       .then(({ data }) => {
@@ -255,6 +254,7 @@ class App extends Component {
           searching: false
         })
       })
+      .catch(handleAuthExpiry)
       .catch(err => {
         console.log('Error', err)
         this.setState({ searching: false })
@@ -307,16 +307,18 @@ class App extends Component {
         createPlaylistInput: '',
         playlists: [data, ...state.playlists]
       }))
-    } catch (err) {
-      console.error(err)
+    } catch (error) {
+      console.error(error)
+      handleAuthExpiry(error)
     }
   }
 
   render() {
+    const { user } = this.props
     const { found, total } = this.state
 
-    const isLoggedIn = typeof this.state.user.id !== 'undefined'
-    const userCanPlay = get(this.state.user, 'product') === 'premium'
+    const isLoggedIn = typeof user !== 'undefined'
+    const userCanPlay = get(user, 'product') === 'premium'
     const hasResults = this.state.results.length > 0
     const isPlaying = this.state.currentTrack.id !== null && !this.state.paused
 
@@ -336,89 +338,38 @@ class App extends Component {
 
     return (
       <div>
-        <Header>
-          <h3>Tracklist for Spotify</h3>
-          {isLoggedIn && (
-            <Flex alignItems="center">
-              {this.state.user.display_name}
-              <Avatar ml={3} src={this.state.user.images.find(x => x).url} />
-            </Flex>
-          )}
-        </Header>
+        <Header user={user} />
 
-        <Modal visible={this.state.modalVisible}>
-          <Backdrop
-            onClick={() =>
-              this.setState({
-                modalVisible: false
-              })
-            }
-          />
-          <Playlists>
-            <h2>My Playlists</h2>
-            <div>
-              <Flex
-                mb={2}
-                mx={2}
-                alignItems="center"
-                justifyContent="space-between"
-              >
-                <Input
-                  ref={c => {
-                    this.createPlaylistInput = c
-                  }}
-                  type="text"
-                  name="create-playlist"
-                  value={this.state.createPlaylistInput}
-                  placeholder="Create new playlist..."
-                  onChange={this.handleCreatePlaylistChange}
-                />
-                <div>
-                  <SpotifyButton small onClick={this.createNewPlaylist}>
-                    Create
-                  </SpotifyButton>
-                </div>
-              </Flex>
-
-              {this.state.playlists.map(playlist => (
-                <Playlist key={playlist.id}>
-                  <Flex alignItems="center" style={{ overflow: 'hidden' }}>
-                    <Image mr={3} src={get(playlist.images[0], 'url')} />
-                    <strong>{playlist.name}</strong>
-                  </Flex>
-                  <SpotifyButton
-                    small
-                    onClick={() =>
-                      this.addTracksToPlaylist(playlist.id, this.state.results)
-                    }
-                  >
-                    {this.state.added.includes(playlist.id)
-                      ? '✓ Added'
-                      : this.state.adding === playlist.id
-                        ? 'Adding...'
-                        : 'Add'}
-                  </SpotifyButton>
-                </Playlist>
-              ))}
-            </div>
-          </Playlists>
-        </Modal>
+        <PlaylistModal
+          added={this.state.added}
+          adding={this.state.adding}
+          createPlaylistInput={this.state.createPlaylistInput}
+          handleCreateNewPlaylist={this.createNewPlaylist}
+          handleCreatePlaylistChange={this.handleCreatePlaylistChange}
+          handleAddTracksToPlaylist={this.addTracksToPlaylist}
+          playlists={this.state.playlists}
+          results={this.state.results}
+          setModalState={value => this.setState({ modalVisible: value })}
+          visible={this.state.modalVisible}
+        />
 
         <Content>
           <LeftPanel>
             {!isLoggedIn && (
               <LoginButton>
-                <SpotifyLink href="/auth/spotify">
+                <SpotifyLink
+                  onClick={() => window.location.assign('/api/auth/login')}
+                >
                   Login with Spotify
                 </SpotifyLink>
               </LoginButton>
             )}
 
             <Textarea
-              autocomplete="off"
-              autocorrect="off"
-              autocapitalize="off"
-              spellcheck="false"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck="false"
               placeholder={placeholder}
               value={this.state.value}
               onChange={event =>
@@ -428,11 +379,16 @@ class App extends Component {
               }
             />
 
-            <ActionsBar>
-              <ActionButton secondary onClick={this.removeTrackNumbers}>
+            <Flex>
+              <ActionButton
+                flex={1}
+                secondary
+                onClick={this.removeTrackNumbers}
+              >
                 Remove Track Numbers
               </ActionButton>
               <ActionButton
+                flex={1}
                 secondary={this.state.value.length <= 0}
                 primary={this.state.value.length > 0}
                 onClick={this.search}
@@ -442,7 +398,7 @@ class App extends Component {
                   ? 'Searching Spotify...'
                   : 'Find tracks on Spotify'}
               </ActionButton>
-            </ActionsBar>
+            </Flex>
           </LeftPanel>
 
           <RightPanel>
@@ -450,84 +406,26 @@ class App extends Component {
               <Indicator />
             ) : this.state.results.length > 0 ? (
               <Fragment>
-                <Tracks>
+                <Box ml={4}>
                   <h4>
                     Found {found} of {total} on Spotify
                   </h4>
-                  {this.state.results.map(
-                    ({ id, title, artist, image, uri }, i) => (
-                      <Track key={id} onClick={this.playTrack(id, i, uri)}>
-                        <Flex>
-                          <TrackImage>
-                            <Image src={image.url} />
-                            <PlaybackIcon
-                              className="playback-icon"
-                              isPlaying={this.state.currentTrack.id === id}
-                            >
-                              {this.state.currentTrack.id === id ? (
-                                this.state.paused ? (
-                                  '▶'
-                                ) : (
-                                  <Icon type="pause" />
-                                )
-                              ) : (
-                                '▶'
-                              )}
-                            </PlaybackIcon>
-                          </TrackImage>
-                          <div>
-                            <SongTitle>{title}</SongTitle>
-                            <SongArtist>{artist}</SongArtist>
-                          </div>
-                        </Flex>
-                        <a
-                          type="button"
-                          onClick={event => {
-                            event.preventDefault()
-                            event.stopPropagation()
-                            window.location.href = uri
-                          }}
-                        >
-                          <Icon
-                            color="#b7b7b7"
-                            hoverColor="spotify"
-                            fontSize={22}
-                            type="spotify"
-                          />
-                        </a>
-                      </Track>
-                    )
-                  )}
-                </Tracks>
+                </Box>
+                <Tracklist
+                  results={this.state.results}
+                  currentTrack={this.state.currentTrack}
+                  paused={this.state.paused}
+                  playTrack={this.playTrack}
+                />
 
-                <ActionsBar>
-                  {hasResults &&
-                    userCanPlay && (
-                      <ActionButton
-                        secondary
-                        onClick={isPlaying ? this.pause : this.playAll}
-                      >
-                        {isPlaying ? (
-                          <span>
-                            <Icon type="pause" /> Pause
-                          </span>
-                        ) : (
-                          '▶ Play'
-                        )}
-                      </ActionButton>
-                    )}
-                  <ActionButton primary onClick={this.getPlaylists}>
-                    <Spinner active={this.state.fetchingPlaylists} />{' '}
-                    {this.state.fetchingPlaylists ? (
-                      'Fetching playlists...'
-                    ) : (
-                      <span>
-                        <Icon mr={2} type="add-to-list" />
-                        Add to playlist
-                      </span>
-                    )}
-                  </ActionButton>
-                </ActionsBar>
+                <ActionsBar
+                  shouldDisplayActionsBar={hasResults && userCanPlay}
+                  isPlaying={isPlaying}
+                  play={this.playAll}
+                  pause={this.pause}
+                  getPlaylists={this.getPlaylists}
+                  fetchingPlaylists={this.state.fetchingPlaylists}
+                />
               </Fragment>
             ) : (
               <EmptyState>
@@ -551,34 +449,11 @@ class App extends Component {
             )}
           </RightPanel>
         </Content>
-        <Footer>
-          <div>
-            <span>
-              Built by{' '}
-              <a
-                href="https://twitter.com/mrkmur"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Mark Murray
-              </a>
-            </span>
-            <strong> | </strong>
-            <a
-              target="_blank"
-              rel="noopener noreferrer"
-              href="https://github.com/markmur/spotify-finder"
-            >
-              View Source on GitHub
-            </a>
-            <strong> | </strong>
-            <span> This app is not affiliated with Spotify.</span>
-          </div>
-          <div />
-        </Footer>
+
+        <Footer />
       </div>
     )
   }
 }
 
-export default hot(module)(App)
+export default App
