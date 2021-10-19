@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 class Spotify {
-  constructor(basePath = '/api') {
+  constructor(basePath = '/api/spotify') {
     this.basePath = basePath
   }
 

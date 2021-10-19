@@ -1,7 +1,13 @@
 import styled from 'styled-components'
-import { Flex } from 'grid-styled'
+import { Flex as StyledFlex } from 'grid-styled'
 import { lighten } from 'polished'
 import { space } from 'styled-system'
+
+export const Box = styled.div`
+  ${space};
+`
+
+export const Flex = StyledFlex
 
 const color = color => p => p.theme.colors[color]
 
@@ -228,6 +234,7 @@ export const ActionButton = styled.button`
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 1px;
+  flex: ${p => p.flex || 'initial'};
 
   i {
     position: relative;
@@ -263,12 +270,15 @@ export const SpotifyButton = styled.button`
 
 export const SpotifyLink = SpotifyButton.withComponent('a')
 
-export const Avatar = styled.img.attrs({
+export const Avatar = styled.div.attrs({
   size: 30
 })`
   width: ${p => p.size}px;
   height: ${p => p.size}px;
   border-radius: 50%;
+  background-image: url(${p => p.src});
+  background-size: cover;
+  background-position: center center;
   ${space};
 `
 
