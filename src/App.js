@@ -321,7 +321,6 @@ class App extends Component {
   handleInputChange = event => {
     try {
       const encoded = btoa(event.target.value)
-      console.log({ encoded })
       history.replaceState({}, null, document.location.origin + `/${encoded}`)
     } catch (error) {
       console.log('Something went wrong', error)
