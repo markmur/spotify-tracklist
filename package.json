@@ -37,6 +37,7 @@
   "scripts": {
     "dev": "next",
     "build": "next build",
+    "export": "next export",
     "deploy": "now --public && now alias && now rm spotify-tracklist --safe -y",
     "start": "next start",
     "lint-staged": "lint-staged"
