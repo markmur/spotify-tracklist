@@ -81,6 +81,10 @@ class App extends Component {
           user: data
         })
 
+        if (this.props.shouldLoadResults) {
+          this.search()
+        }
+
         // window.onSpotifyWebPlaybackSDKReady = () => {
         //   this.player = new window.Spotify.Player({
         //     name: 'Tracklist for Spotify',
@@ -314,6 +318,20 @@ class App extends Component {
     }
   }
 
+  handleInputChange = event => {
+    try {
+      const encoded = btoa(event.target.value)
+      console.log({ encoded })
+      history.replaceState({}, null, document.location.origin + `/${encoded}`)
+    } catch (error) {
+      console.log('Something went wrong', error)
+    }
+
+    this.setState({
+      value: event.target.value
+    })
+  }
+
   render() {
     const { user } = this.props
     const { found, total } = this.state
@@ -375,11 +393,7 @@ class App extends Component {
               spellCheck="false"
               placeholder={placeholder}
               value={this.state.value}
-              onChange={event =>
-                this.setState({
-                  value: event.target.value
-                })
-              }
+              onChange={this.handleInputChange}
             />
 
             <Flex>
@@ -392,8 +406,12 @@ class App extends Component {
               </ActionButton>
               <ActionButton
                 flex={1}
+                aria-value={this.state.value}
                 secondary={this.state.value.length <= 0}
-                primary={this.state.value.length > 0}
+                primary={
+                  this.state.value.length > 0 ||
+                  this.props.initialValue.length > 0
+                }
                 onClick={this.search}
               >
                 <Spinner active={this.state.searching} />{' '}

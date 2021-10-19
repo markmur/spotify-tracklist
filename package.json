@@ -51,6 +51,7 @@
     "@types/react": "^17.0.0",
     "@types/spotify-web-api-node": "^4.0.2",
     "@types/styled-components": "^5.1.4",
+    "@types/styled-system": "^5.1.13",
     "babel-eslint": "^8.2.6",
     "concurrently": "^3.6.1",
     "eslint": "^8.0.1",

@@ -1,15 +1,18 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import { Flex as StyledFlex } from 'grid-styled'
 import { lighten } from 'polished'
-import { space } from 'styled-system'
+import { space, color, backgroundColor } from 'styled-system'
 
 export const Box = styled.div`
   ${space};
 `
 
-export const Flex = StyledFlex
+export const Flex = styled(StyledFlex)`
+  ${color};
+  ${backgroundColor};
+`
 
-const color = color => p => p.theme.colors[color]
+const getColor = color => p => p.theme.colors[color]
 
 export const Label = styled.label`
   display: block;
@@ -54,7 +57,7 @@ export const Input = styled.input`
 
 export const Header = styled.header`
   height: 56px;
-  background: ${color('header')};
+  background: ${getColor('header')};
   padding: 1em;
   color: white;
   display: flex;
@@ -70,7 +73,7 @@ export const Footer = styled.footer`
   justify-content: space-between;
   white-space: nowrap;
   height: 56px;
-  background: ${color('footer')};
+  background: ${getColor('footer')};
   padding: 1em 2em;
   color: rgba(255, 255, 255, 0.7);
   font-size: 13px;
@@ -90,9 +93,19 @@ export const Footer = styled.footer`
   }
 `
 
+const mobile = content => css`
+  @media (max-width: 767px) {
+    ${content};
+  }
+`
+
 export const Content = styled.div`
   display: flex;
   height: calc(100vh - 56px - 56px);
+
+  ${mobile(`
+    flex-direction: column;
+  `)};
 `
 
 export const LeftPanel = styled.div`
@@ -103,6 +116,26 @@ export const LeftPanel = styled.div`
   flex-direction: column;
   justify-content: space-between;
   background: ${p => lighten(0.001, p.theme.colors.footer)};
+
+  ${mobile(`
+    flex: 1;
+    max-height: calc(50vh - 56px);
+  `)};
+`
+
+export const RightPanel = styled.div`
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  justify-content: space-between;
+  background: ${p => p.theme.colors.dark};
+  flex: 0 1 50%;
+  color: white;
+
+  ${mobile(`
+    flex: 1;
+    max-height: calc(50vh - 56px);
+  `)};
 `
 
 export const Textarea = styled.textarea`
@@ -118,16 +151,6 @@ export const Textarea = styled.textarea`
   color: white;
   resize: none;
   background: ${p => lighten(0.001, p.theme.colors.footer)};
-`
-
-export const RightPanel = styled.div`
-  display: flex;
-  position: relative;
-  flex-direction: column;
-  justify-content: space-between;
-  background: ${p => p.theme.colors.dark};
-  flex: 0 1 50%;
-  color: white;
 `
 
 export const EmptyState = styled.div`
@@ -159,7 +182,7 @@ export const Track = styled.div`
   border-radius: 4px;
   align-items: center;
   cursor: pointer;
-  border-bottom: 1px solid ${color('border')};
+  border-bottom: 1px solid ${getColor('border')};
 
   &:hover {
     background: rgba(255, 255, 255, 0.05);
@@ -197,7 +220,7 @@ export const SongArtist = styled.small`
 export const ActionsBar = styled(Flex).attrs({
   justifyContent: 'flex-end'
 })`
-  background: ${color('light')};
+  background: ${getColor('light')};
 `
 
 export const LoginButton = styled.div`
@@ -246,7 +269,7 @@ export const ActionButton = styled.button`
 `
 
 export const SpotifyButton = styled.button`
-  background: ${color('spotify')};
+  background: ${getColor('spotify')};
   border-radius: 35px;
   color: white;
   border: none;
@@ -307,7 +330,7 @@ export const Playlists = styled.div`
   color: white;
   z-index: 100;
   font-weight: bold;
-  background: ${color('light')};
+  background: ${getColor('light')};
   border-radius: 4px;
   z-index: 2;
 `
@@ -330,10 +353,10 @@ export const Playlist = styled.div`
   padding: 1em;
   font-size: 14px;
   overflow: hidden;
-  border-bottom: 1px solid ${color('light')};
+  border-bottom: 1px solid ${getColor('light')};
 
   &:hover {
-    background: ${color('light')};
+    background: ${getColor('light')};
   }
 
   strong {
