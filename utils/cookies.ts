@@ -1,11 +1,30 @@
 import axios from 'axios'
 import Iron from '@hapi/iron'
 import querystring from 'querystring'
-import jwt, { JwtPayload } from 'jsonwebtoken'
 import { serialize, CookieSerializeOptions } from 'cookie'
 import { NextApiRequest, NextApiResponse } from 'next'
 
 const { SESSION_SECRET } = process.env
+
+export interface UserSession {
+  user: {
+    id: string
+    display_name: string
+    email: string
+    image_url: string
+  }
+  token: {
+    access_token: string
+    token_type: string
+    expires_in: number
+    refresh_token: string
+    scope: string
+  }
+}
+
+export type ApiRequestWithToken = NextApiRequest & {
+  session: UserSession
+}
 
 /**
  * This sets `cookie` using the `res` object
@@ -13,7 +32,7 @@ const { SESSION_SECRET } = process.env
 
 export const setAuthCookie = async (
   res: NextApiResponse,
-  session: JwtPayload,
+  session: UserSession,
   options: CookieSerializeOptions = {}
 ) => {
   const defaults: CookieSerializeOptions = {
@@ -76,26 +95,6 @@ export const getAuthToken = async (
   } catch {
     throw new Error('Auth token not found')
   }
-}
-
-export interface UserSession {
-  user: {
-    id: string
-    display_name: string
-    email: string
-    image_url: string
-  }
-  token: {
-    access_token: string
-    token_type: string
-    expires_in: number
-    refresh_token: string
-    scope: string
-  }
-}
-
-export type ApiRequestWithToken = NextApiRequest & {
-  session: UserSession
 }
 
 export const withAuthSession = fn => async (

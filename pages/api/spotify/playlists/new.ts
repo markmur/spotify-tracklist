@@ -3,7 +3,7 @@ import {
   ApiRequestWithToken,
   withAuthSession
 } from './../../../../utils/cookies'
-import spotify from '../../../../utils/spotify'
+import { createSpotifyApi } from '../../../../utils/spotify'
 
 const newPlaylist = async (req: ApiRequestWithToken, res: NextApiResponse) => {
   if (!req.body.name) {
@@ -12,9 +12,8 @@ const newPlaylist = async (req: ApiRequestWithToken, res: NextApiResponse) => {
     })
   }
 
-  spotify.setAccessToken(req.session.token.access_token)
-
   try {
+    const spotify = createSpotifyApi(req.session.token.access_token)
     const { body } = await spotify.createPlaylist(
       req.session.user.id,
       req.body.name

@@ -5,13 +5,17 @@ const { CLIENT_ID, CLIENT_SECRET, REDIRECT_URI } = process.env
 
 const SPOTIFY_URL = 'https://api.spotify.com/v1'
 
-const spotify = new Spotify({
-  clientId: CLIENT_ID,
-  clientSecret: CLIENT_SECRET,
-  redirectUri: REDIRECT_URI
-})
+export const createSpotifyApi = (token: string) => {
+  const spotify = new Spotify({
+    clientId: CLIENT_ID,
+    clientSecret: CLIENT_SECRET,
+    redirectUri: REDIRECT_URI
+  })
 
-export default spotify
+  spotify.setAccessToken(token)
+
+  return spotify
+}
 
 export const fetch = (
   url: string,

@@ -1,11 +1,10 @@
 import Axios from 'axios'
-import jwt from 'jsonwebtoken'
 import querystring from 'querystring'
 import { NextApiRequest, NextApiResponse } from 'next'
-import spotify from '../../../utils/spotify'
+import { createSpotifyApi } from './../../../utils/spotify'
 import { setAuthCookie, sendRefreshRedirect } from '../../../utils/cookies'
 
-const { CLIENT_ID, CLIENT_SECRET, REDIRECT_URI, SESSION_SECRET } = process.env
+const { CLIENT_ID, CLIENT_SECRET, REDIRECT_URI } = process.env
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   const { code } = req.query
@@ -22,7 +21,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       })
     )
 
-    spotify.setAccessToken(data.access_token)
+    const spotify = createSpotifyApi(data.access_token)
 
     const profile = await spotify.getMe()
 
@@ -48,7 +47,6 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
     return sendRefreshRedirect(res)
   } catch (error) {
-    console.error(error, error.response, 'HERE?')
     res.status(400).send('error')
   }
 }

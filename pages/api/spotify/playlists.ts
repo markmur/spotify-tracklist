@@ -1,11 +1,10 @@
 import { NextApiResponse } from 'next'
 import { ApiRequestWithToken, withAuthSession } from './../../../utils/cookies'
-import spotify from '../../../utils/spotify'
+import { createSpotifyApi } from '../../../utils/spotify'
 
 const playlists = async (req: ApiRequestWithToken, res: NextApiResponse) => {
-  spotify.setAccessToken(req.session.token.access_token)
-
   try {
+    const spotify = createSpotifyApi(req.session.token.access_token)
     const { body } = await spotify.getUserPlaylists()
 
     return res.send(body)

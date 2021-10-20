@@ -1,6 +1,6 @@
 import { NextApiResponse } from 'next'
 import { ApiRequestWithToken, withAuthSession } from './../../../utils/cookies'
-import spotify from '../../../utils/spotify'
+import { createSpotifyApi } from '../../../utils/spotify'
 
 const search = async (req: ApiRequestWithToken, res: NextApiResponse) => {
   const { query } = req.body
@@ -17,7 +17,7 @@ const search = async (req: ApiRequestWithToken, res: NextApiResponse) => {
   const requests = songs.map(song => {
     const [artist, track] = song.split(/[-–]/gi)
 
-    spotify.setAccessToken(req.session.token.access_token)
+    const spotify = createSpotifyApi(req.session.token.access_token)
 
     return spotify
       .searchTracks(
