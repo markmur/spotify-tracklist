@@ -3,6 +3,12 @@ import { Flex as StyledFlex } from 'grid-styled'
 import { lighten } from 'polished'
 import { space, color, backgroundColor } from 'styled-system'
 
+const mobile = content => css`
+  @media (max-width: 767px) {
+    ${content};
+  }
+`
+
 export const Box = styled.div`
   ${space};
 `
@@ -78,6 +84,11 @@ export const Footer = styled.footer`
   color: rgba(255, 255, 255, 0.7);
   font-size: 13px;
   text-align: center;
+  line-height: 2;
+
+  ${mobile(`
+    white-space: normal;
+  `)};
 
   strong {
     margin: 0 1em;
@@ -90,12 +101,6 @@ export const Footer = styled.footer`
     &:hover {
       color: white;
     }
-  }
-`
-
-const mobile = content => css`
-  @media (max-width: 767px) {
-    ${content};
   }
 `
 
@@ -231,6 +236,7 @@ export const LoginButton = styled.div`
   padding: 1.25em 0.9em;
   border-radius: 45px;
   z-index: 100;
+  white-space: nowrap;
   background: ${p => lighten(0.001, p.theme.colors.footer)};
 `
 

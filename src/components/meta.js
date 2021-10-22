@@ -7,10 +7,7 @@ const Meta = () => {
       <meta charSet="utf-8" />
       <title>Spotify Tracklist</title>
       <link rel="canonical" href="https://spotify-tracklist.vercel.app" />
-      <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1, shrink-to-fit=no"
-      />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
       <meta name="theme-color" content="#000000" />
       {/* <script src="https://sdk.scdn.co/spotify-player.js"></script> */}
 
