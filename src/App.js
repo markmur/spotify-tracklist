@@ -260,7 +260,8 @@ class App extends Component {
           missing: data.missing,
           total: value.split('\n').filter(removeEmptyLines).length,
           found: results.length,
-          searching: false
+          searching: false,
+          value: this.state.value
         })
       })
       .catch(handleAuthExpiry)
@@ -407,16 +408,7 @@ class App extends Component {
               >
                 Remove Track Numbers
               </ActionButton>
-              <ActionButton
-                flex={1}
-                aria-value={this.state.value}
-                secondary={this.state.value.length <= 0}
-                primary={
-                  this.state.value.length > 0 ||
-                  this.props.initialValue.length > 0
-                }
-                onClick={this.search}
-              >
+              <ActionButton primary flex={1} onClick={this.search}>
                 <Spinner active={this.state.searching} />{' '}
                 {this.state.searching
                   ? 'Searching Spotify...'

@@ -292,6 +292,11 @@ export const ActionButton = styled.button`
 
   ${primary};
   ${secondary};
+
+  &:disabled {
+    opacity: 0.6;
+    pointer-events: none;
+  }
 `
 
 export const SpotifyButton = styled.button`
