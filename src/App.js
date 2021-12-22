@@ -15,6 +15,7 @@ import Tracklist from './components/tracklist'
 import {
   Box,
   Flex,
+  Text,
   Content,
   LeftPanel,
   RightPanel,
@@ -22,7 +23,8 @@ import {
   EmptyState,
   LoginButton,
   ActionButton,
-  SpotifyLink
+  SpotifyLink,
+  TracklistContainer
 } from './styles'
 
 GoogleAnalytics.initialize('UA-76403737-6')
@@ -56,6 +58,7 @@ class App extends Component {
     value: this.props.initialValue,
     user: {},
     results: [],
+    missing: [],
     total: 0,
     found: 0,
     playlists: [],
@@ -248,12 +251,13 @@ class App extends Component {
     spotify
       .search(this.formatQueryForSearch(value))
       .then(({ data }) => {
-        const results = data
+        const results = data.results
           .filter(x => x && x.length)
           .map(x => this.getTrackInformation(x[0]))
 
         this.setState({
           results,
+          missing: data.missing,
           total: value.split('\n').filter(removeEmptyLines).length,
           found: results.length,
           searching: false
@@ -431,12 +435,30 @@ class App extends Component {
                     Found {found} of {total} on Spotify
                   </h4>
                 </Box>
-                <Tracklist
-                  results={this.state.results}
-                  currentTrack={this.state.currentTrack}
-                  paused={this.state.paused}
-                  playTrack={this.playTrack}
-                />
+
+                <TracklistContainer>
+                  <Tracklist
+                    results={this.state.results}
+                    currentTrack={this.state.currentTrack}
+                    paused={this.state.paused}
+                    playTrack={this.playTrack}
+                  />
+
+                  {this.state.missing.length ? (
+                    <React.Fragment>
+                      <Box ml={4}>
+                        <Text as="h4" mb={0}>
+                          Missing ({this.state.missing?.length})
+                        </Text>
+                        <Text as="small" fontSize={12}>
+                          Remove any line numbers or strange characters and try
+                          again.
+                        </Text>
+                      </Box>
+                      <Tracklist results={this.state.missing} />
+                    </React.Fragment>
+                  ) : null}
+                </TracklistContainer>
 
                 <ActionsBar
                   shouldDisplayActionsBar={hasResults && userCanPlay}

@@ -1,7 +1,7 @@
 import styled, { css } from 'styled-components'
 import { Flex as StyledFlex } from 'grid-styled'
 import { lighten } from 'polished'
-import { space, color, backgroundColor } from 'styled-system'
+import { space, color, backgroundColor, fontSize } from 'styled-system'
 
 const mobile = content => css`
   @media (max-width: 767px) {
@@ -30,6 +30,11 @@ export const TrackImage = styled.div`
   height: 40px;
   width: 40px;
   flex-shrink: 0;
+`
+
+export const Text = styled.p`
+  ${fontSize};
+  ${space};
 `
 
 export const PlaybackIcon = styled.div`
@@ -173,11 +178,17 @@ export const EmptyState = styled.div`
   }
 `
 
-export const Tracks = styled.div`
-  padding: 1em 2em 2em;
+export const TracklistContainer = styled.div`
   flex: 1;
   overflow: auto;
   max-height: calc(100vh - 56px - 56px);
+`
+
+export const Tracks = styled.div`
+  padding: 0 2em 2em;
+  flex: 1;
+  overflow: auto;
+  // max-height: calc(100vh - 56px - 56px);
 `
 
 export const Track = styled.div`
@@ -206,6 +217,15 @@ export const Image = styled.img.attrs({
   flex: 0 1 auto;
   border-radius: 3px;
   ${space};
+`
+
+export const FallbackImage = styled.div`
+  background: rgba(255, 255, 255, 0.1);
+  flex: 0 1 auto;
+  border-radius: 3px;
+  ${space};
+  width: 40px;
+  height: 40px;
 `
 
 export const SongTitle = styled.strong`

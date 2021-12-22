@@ -8,6 +8,7 @@ import {
   Track,
   TrackImage,
   Image,
+  FallbackImage,
   PlaybackIcon,
   SongTitle,
   SongArtist
@@ -17,24 +18,30 @@ export default ({ results, currentTrack, paused, playTrack }) => {
   return (
     <Tracks>
       {results.map(({ id, title, artist, image, uri }, i) => (
-        <Track key={id} onClick={playTrack(id, i, uri)}>
+        <Track
+          key={id || title}
+          onClick={playTrack ? playTrack(id, i, uri) : undefined}
+        >
           <Flex>
             <TrackImage>
-              <Image src={image.url} />
-              <PlaybackIcon
-                className="playback-icon"
-                isPlaying={currentTrack.id === id}
-              >
-                {currentTrack.id === id ? (
-                  paused ? (
-                    '▶'
+              {image ? <Image src={image?.url} /> : <FallbackImage />}
+
+              {currentTrack && (
+                <PlaybackIcon
+                  className="playback-icon"
+                  isPlaying={currentTrack?.id === id}
+                >
+                  {currentTrack?.id === id ? (
+                    paused ? (
+                      '▶'
+                    ) : (
+                      <Icon type="pause" />
+                    )
                   ) : (
-                    <Icon type="pause" />
-                  )
-                ) : (
-                  '▶'
-                )}
-              </PlaybackIcon>
+                    '▶'
+                  )}
+                </PlaybackIcon>
+              )}
             </TrackImage>
             <div>
               <SongTitle>{title}</SongTitle>
