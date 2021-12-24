@@ -29,13 +29,19 @@ import {
 
 GoogleAnalytics.initialize('UA-76403737-6')
 
-const trimDashes = x => x.replace(/[-]{2,}/gi, '-')
-const removeEmptyLines = (x = '') => x.trim().length > 0
-const removeFeatured = x => x.replace(/(feat|ft)\.?/gim, '')
-const removeSpecialDashes = x => x.replace(/\u2013|\u2014/gm, '-')
-const removeAmpersands = (x = '') => x.trim().replace('&', '')
-const removeBrackets = x => x.replace(/\[.+\]$/gim, '')
+const RE_TIMING = /([\(\[])([0-9]{1,2}:)?[0-9]{1,2}:[0-9]{2}([\)\]])/gi
+const RE_DASHES = /[-]{2,}/gi
+const RE_SPECIAL_DASHES = /\u2013|\u2014/gm
+const RE_BRACKETS = /\[.+\]$/gim
+const RE_FEATURED = /(feat|ft)\.?/gim
 
+const trimDashes = x => x.replace(RE_DASHES, '-')
+const removeEmptyLines = (x = '') => x.trim().length > 0
+const removeFeatured = x => x.replace(RE_FEATURED, '')
+const removeSpecialDashes = x => x.replace(RE_SPECIAL_DASHES, '-')
+const removeAmpersands = (x = '') => x.trim().replace('&', '')
+const removeBrackets = x => x.replace(RE_BRACKETS, '')
+const removeTimingInformation = x => x.replace(RE_TIMING, '')
 const captureTrackInformation = x => {
   const captured = /([\[]?[0-9]{0,2}[:.]*[0-9]{0,2}[:.]*[0-9]{0,2}[\]]?[\s0-9.]*)?([-:\s]*)(.+)/gi.exec(
     x
@@ -281,6 +287,7 @@ class App extends Component {
       .map(removeSpecialDashes)
       .map(removeFeatured)
       .map(trimDashes)
+      .map(removeTimingInformation)
       .join('\n')
   }
 
