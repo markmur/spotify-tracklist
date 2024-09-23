@@ -23,7 +23,7 @@ const search = async (req: ApiRequestWithToken, res: NextApiResponse) => {
 
     return spotify
       .searchTracks(
-        `artist:${artist} track:${track}`
+        `${artist} ${track}`
       )
       .then(res => {
         if (res.body?.tracks?.total === 0) {
