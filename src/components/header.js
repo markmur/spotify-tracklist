@@ -1,7 +1,7 @@
-import React from 'react'
-import { Flex } from 'grid-styled'
+import { Avatar, Header as StyledHeader } from '../styles'
 
-import { Header as StyledHeader, Avatar } from '../styles'
+import { Flex } from 'grid-styled'
+import React from 'react'
 
 const Header = ({ user }) => {
   return (
@@ -10,7 +10,7 @@ const Header = ({ user }) => {
       {user && (
         <Flex alignItems="center">
           {user.name}
-          <Avatar ml={3} src={user.image_url} />
+          <Avatar ml={3} $src={user.image_url} />
         </Flex>
       )}
     </StyledHeader>

@@ -1,5 +1,6 @@
-import { NextApiResponse } from 'next'
 import { ApiRequestWithToken, withAuthSession } from './../../../utils/cookies'
+
+import { NextApiResponse } from 'next'
 import { createSpotifyApi } from '../../../utils/spotify'
 
 const search = async (req: ApiRequestWithToken, res: NextApiResponse) => {
@@ -13,34 +14,37 @@ const search = async (req: ApiRequestWithToken, res: NextApiResponse) => {
   }
 
   const songs = query.split('\n').map(x => x.trim())
-  const missing = []
 
   const requests = songs.map(song => {
-    const [artist, track] = song.split(/[-–]/gi)
+    const split = song.split(/[-–]/gi)
     const spotify = createSpotifyApi(req.session.token.access_token)
+    const artist = (split[0] || '').trim();
+    const track = (split[1] || '').trim();
 
     return spotify
       .searchTracks(
-        `artist:${(artist || '').trim()} track:${(track || '').trim()}`
+        `artist:${artist} track:${track}`
       )
       .then(res => {
         if (res.body?.tracks?.total === 0) {
-          missing.push({ id: track, artist, title: track })
+          return { id: track, artist, title: track, missing: true }
         }
 
         return res.body.tracks.items || res.body.tracks
       })
-      .catch(err => {
-        console.error('ERROR!', err)
-        missing.push({ id: track, artist, title: track })
+      .catch(error => {
+        console.error('[api/spotify/search] Failed to find track', error)
+        return { id: track, artist, title: track, missing: true }
       })
   })
 
   try {
     const results = await Promise.all(requests)
+
+    console.log('Sending', results.length, 'results')
     return res.send({
       results,
-      missing
+      missing: []
     })
   } catch (error) {
     console.error(error)

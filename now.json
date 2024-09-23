@@ -1,8 +1,8 @@
 {
   "env": {
-    "CLIENT_ID": "@spotify_client_id",
-    "CLIENT_SECRET": "@spotify_client_secret",
-    "REDIRECT_URI": "@spotify_redirect_uri",
-    "SESSION_SECRET": "@spotify_session_secret"
+    "SPOTIFY_CLIENT_ID": "@spotify_client_id",
+    "SPOTIFY_CLIENT_SECRET": "@spotify_client_secret",
+    "SPOTIFY_REDIRECT_URI": "@spotify_redirect_uri",
+    "SPOTIFY_SESSION_SECRET": "@spotify_session_secret"
   }
 }

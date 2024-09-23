@@ -1,57 +1,84 @@
-import React, { Fragment, Component } from 'react'
-import GoogleAnalytics from 'react-ga'
-
-import { get } from './utils'
-import spotify from './spotify'
-import Spinner from './components/spinner'
-import Meta from './components/meta'
-import Indicator from './components/indicator'
-import Footer from './components/footer'
-import Header from './components/header'
-import PlaylistModal from './components/modals/playlists'
-import ActionsBar from './components/actions-bar'
-import Tracklist from './components/tracklist'
-
 import {
-  Box,
-  Flex,
-  Text,
-  Content,
-  LeftPanel,
-  RightPanel,
-  Textarea,
-  EmptyState,
-  LoginButton,
   ActionButton,
-  SpotifyLink,
+  Box,
+  Content,
+  EmptyState,
+  Flex,
+  LeftPanel,
+  LoginButton,
+  RightPanel,
+  SpotifyButton,
+  Text,
+  Textarea,
   TracklistContainer
 } from './styles'
+import React, { Component, Fragment } from 'react'
+
+import ActionsBar from './components/actions-bar'
+import Footer from './components/footer'
+import GoogleAnalytics from 'react-ga'
+import Header from './components/header'
+import Indicator from './components/indicator'
+import Meta from './components/meta'
+import PlaylistModal from './components/modals/playlists'
+import Spinner from './components/spinner'
+import Tracklist from './components/tracklist'
+import { get } from './utils'
+import spotify from './spotify'
 
 GoogleAnalytics.initialize('UA-76403737-6')
 
-const RE_TIMING = /([\(\[])([0-9]{1,2}:)?[0-9]{1,2}:[0-9]{2}([\)\]])/gi
+const RE_TIMING = /[\(\[]?([0-9]{1,2}:)?[0-9]{1,2}:[0-9]{2}[\)\]]?/gi
 const RE_DASHES = /[-]{2,}/gi
-const RE_SPECIAL_DASHES = /\u2013|\u2014/gm
-const RE_BRACKETS = /\[.+\]$/gim
-const RE_FEATURED = /(feat|ft)\.?/gim
+const RE_SPECIAL_DASHES = /[\u2013\u2014]/gm
+const RE_BRACKETS = /\[.*?\]$|\(.*?\)$/gim
+const RE_FEATURED = /\b(feat|ft)\.?\b/gi
+const RE_USER_HANDLE = /@[^\s]+(\s)?$/g // Detect and remove user handles (e.g., @55_MUSIC)
 
-const trimDashes = x => x.replace(RE_DASHES, '-')
+const RE_EXTRA_WHITESPACE = /\s{2,}/g
+const RE_AND_IN_ARTIST = /\b\w?and\b/gi // Detect and replace "and" in the artist part
+
+// Helper functions
+const trimDashes = (x) => x.replace(RE_DASHES, '-')
 const removeEmptyLines = (x = '') => x.trim().length > 0
-const removeFeatured = x => x.replace(RE_FEATURED, '')
-const removeSpecialDashes = x => x.replace(RE_SPECIAL_DASHES, '-')
-const removeAmpersands = (x = '') => x.trim().replace('&', '')
-const removeBrackets = x => x.replace(RE_BRACKETS, '')
-const removeTimingInformation = x => x.replace(RE_TIMING, '')
-const captureTrackInformation = x => {
-  const captured = /([\[]?[0-9]{0,2}[:.]*[0-9]{0,2}[:.]*[0-9]{0,2}[\]]?[\s0-9.]*)?([-:\s]*)(.+)/gi.exec(
-    x
-  )
+const removeFeatured = (x) => x.replace(RE_FEATURED, '')
+const removeUserHandles = (x) => x.replace(RE_USER_HANDLE, '')
+const removeSpecialDashes = (x) => x.replace(RE_SPECIAL_DASHES, '-')
+const removeAmpersands = (x = '') => x.replace(/&/g, 'and')
+const removeBrackets = (x) => x.replace(RE_BRACKETS, '')
+const removeTimingInformation = (x) => x.replace(RE_TIMING, '')
+const cleanExtraWhitespace = (x) => x.replace(RE_EXTRA_WHITESPACE, ' ').trim()
 
-  return captured[3] || ''
+// Replace "and" with a comma in the artist portion
+const cleanArtist = (x = '') => x.replace(RE_AND_IN_ARTIST, ',')
+
+const processLine = (line = '') => {
+  // Split into artist and track by finding the first dash (-)
+  const parts = line.split(/\s*-\s*/, 2)
+  if (parts.length < 2) return line // Return the original if no dash is found
+
+  const artist = cleanArtist(parts[0]) // Replace "and" with commas in the artist part
+  const track = parts[1] // Track remains unchanged
+  return `${artist} - ${track}` // Return cleaned artist and track info
 }
 
-const handleAuthExpiry = error => {
-  if (error.response.status === 401) {
+// Normalize special characters to their basic UTF-8 equivalents
+const normalizeText = (x = '') =>
+  x
+    .normalize('NFD') // Decompose special characters
+    .replace(/[\u0300-\u036f\u1dc0-\u1dff\u20d0-\u20ff]/g, '') // Remove all combining diacritics
+
+// Function to capture artist and track information
+const captureTrackInformation = (x) => {
+  const captured =
+    /(?:[\(\[]?[0-9]{0,2}[:.]*[0-9]{0,2}[:.]*[0-9]{0,2}[\]\)]?\s*)?([-:\s]*)(.+)/gi.exec(
+      x
+    )
+  return captured ? captured[2] : ''
+}
+
+const handleAuthExpiry = (error) => {
+  if (error?.response?.status === 401) {
     window.location.assign('/api/auth/refresh')
   }
 
@@ -63,8 +90,7 @@ class App extends Component {
     init: true,
     value: this.props.initialValue,
     user: {},
-    results: [],
-    missing: [],
+    results: results,
     total: 0,
     found: 0,
     playlists: [],
@@ -111,7 +137,7 @@ class App extends Component {
       if (this.player) this.player?.disconnect()
     }
 
-    this.listeners.map(name => this.player?.removeListener(name))
+    this.listeners.map((name) => this.player?.removeListener(name))
   }
 
   connectSpotifyPlayer() {
@@ -119,7 +145,7 @@ class App extends Component {
       console.error(message)
     }
 
-    this.addListener('player_state_changed', state => {
+    this.addListener('player_state_changed', (state) => {
       if (!state) {
         this.setState({
           currentTrack: {},
@@ -154,12 +180,12 @@ class App extends Component {
   }
 
   removeTrackNumbers = () => {
-    this.setState(state => ({
+    this.setState((state) => ({
       value: this.formatQueryForSearch(state.value)
     }))
   }
 
-  createPlaylist = name => {
+  createPlaylist = (name) => {
     return spotify.createPlaylist(name).catch(handleAuthExpiry)
   }
 
@@ -167,7 +193,7 @@ class App extends Component {
     this.setState({ adding: id })
     try {
       await spotify.addTracksToPlaylist(id, tracks)
-      this.setState(state => ({ adding: null, added: [...state.added, id] }))
+      this.setState((state) => ({ adding: null, added: [...state.added, id] }))
       this.getPlaylists()
     } catch (error) {
       console.error(error)
@@ -192,18 +218,18 @@ class App extends Component {
     }
   }
 
-  play = async tracks => {
+  play = async (tracks) => {
     if (this.state.currentTrack.uri === tracks[0]) return this.player?.resume()
 
     return spotify
       .play(tracks, this.deviceId, this.state.user.token)
-      .catch(error => {
+      .catch((error) => {
         console.error(error)
         handleAuthExpiry(error)
       })
   }
 
-  playTrack = (id, index, uri) => event => {
+  playTrack = (id, index, uri) => (event) => {
     event.preventDefault()
     event.stopPropagation()
 
@@ -222,7 +248,7 @@ class App extends Component {
     }
 
     // Play all from track index onwards
-    this.play(results.slice(index).map(x => x.uri))
+    this.play(results.slice(index).map((x) => x.uri))
   }
 
   playAll = () => {
@@ -238,7 +264,7 @@ class App extends Component {
     if (!results || results.length <= 0) return
 
     // Play all tracks
-    return this.play(results.map(x => x.uri))
+    return this.play(results.map((x) => x.uri))
   }
 
   pause = () => {
@@ -248,7 +274,10 @@ class App extends Component {
   search = () => {
     const { value } = this.state
 
-    this.setState({ searching: true })
+    this.setState({
+      searching: true,
+      value: this.formatQueryForSearch(value)
+    })
 
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('spotify-tracklist.last-search', value)
@@ -257,9 +286,13 @@ class App extends Component {
     spotify
       .search(this.formatQueryForSearch(value))
       .then(({ data }) => {
-        const results = data.results
-          .filter(x => x && x.length)
-          .map(x => this.getTrackInformation(x[0]))
+        const results = data.results.filter(Boolean).map((result) => {
+          if (Array.isArray(result)) {
+            return this.getTrackInformation(result[0])
+          }
+
+          return this.getTrackInformation(result)
+        })
 
         this.setState({
           results,
@@ -271,7 +304,7 @@ class App extends Component {
         })
       })
       .catch(handleAuthExpiry)
-      .catch(err => {
+      .catch((err) => {
         console.log('Error', err)
         this.setState({ searching: false })
       })
@@ -279,24 +312,28 @@ class App extends Component {
 
   formatQueryForSearch(query) {
     return query
-      .split('\n')
-      .filter(removeEmptyLines)
-      .map(captureTrackInformation)
-      .map(removeBrackets)
-      .map(removeAmpersands)
-      .map(removeSpecialDashes)
-      .map(removeFeatured)
-      .map(trimDashes)
-      .map(removeTimingInformation)
-      .join('\n')
+      .split('\n') // Split lines
+      .filter(removeEmptyLines) // Remove empty lines
+      .map(normalizeText) // Normalize special characters
+      .map(captureTrackInformation) // Capture relevant info
+      .map(removeBrackets) // Remove anything in brackets
+      .map(removeAmpersands) // Replace '&' with 'and'
+      .map(removeSpecialDashes) // Replace special dashes with regular
+      .map(removeFeatured) // Remove 'feat' or 'ft'
+      .map(removeUserHandles) // Remove @handles
+      .map(trimDashes) // Trim excessive dashes
+      .map(removeTimingInformation) // Remove timing information
+      .map(cleanExtraWhitespace) // Clean extra whitespace
+      .map(processLine) // Process each line
+      .join('\n') // Join into a final string
   }
 
   getTrackInformation(track) {
-    const { id, name, uri } = track
-    const image = get(track, 'album.images', []).find(x => x)
-    const album = get(track, 'album.name')
-    const artist = get(track, 'artists')
-      .map(x => x.name)
+    const { id, name, uri, ...rest } = track
+    const image = get(track, 'album.images', []).find((x) => x)
+    const album = get(track, 'album.name', '')
+    const artist = get(track, 'artists', [])
+      .map((x) => x.name)
       .join(', ')
 
     return {
@@ -305,11 +342,12 @@ class App extends Component {
       album,
       title: name,
       image,
-      uri
+      uri,
+      ...rest
     }
   }
 
-  handleCreatePlaylistChange = event => {
+  handleCreatePlaylistChange = (event) => {
     this.setState({
       createPlaylistInput: event.target.value
     })
@@ -320,7 +358,7 @@ class App extends Component {
 
     try {
       const { data } = await spotify.createPlaylist(createPlaylistInput)
-      this.setState(state => ({
+      this.setState((state) => ({
         createPlaylistInput: '',
         playlists: [data, ...state.playlists]
       }))
@@ -330,7 +368,7 @@ class App extends Component {
     }
   }
 
-  handleInputChange = event => {
+  handleInputChange = (event) => {
     try {
       const encoded = btoa(event.target.value)
       history.replaceState({}, null, document.location.origin + `/${encoded}`)
@@ -343,6 +381,13 @@ class App extends Component {
     })
   }
 
+  handleKeyDown = (event) => {
+    if (event.metaKey && event.key === 'Enter') {
+      event.preventDefault()
+      this.search()
+    }
+  }
+
   render() {
     const { user } = this.props
     const { found, total } = this.state
@@ -351,6 +396,7 @@ class App extends Component {
     const userCanPlay = get(user, 'product') === 'premium'
     const hasResults = this.state.results.length > 0
     const isPlaying = this.state.currentTrack.id !== null && !this.state.paused
+    const missing = this.state.results.filter((track) => track?.missing).length
 
     const placeholder = isLoggedIn
       ? [
@@ -381,7 +427,7 @@ class App extends Component {
           handleAddTracksToPlaylist={this.addTracksToPlaylist}
           playlists={this.state.playlists}
           results={this.state.results}
-          setModalState={value => this.setState({ modalVisible: value })}
+          setModalState={(value) => this.setState({ modalVisible: value })}
           visible={this.state.modalVisible}
         />
 
@@ -389,11 +435,12 @@ class App extends Component {
           <LeftPanel>
             {!isLoggedIn && (
               <LoginButton>
-                <SpotifyLink
+                <SpotifyButton
+                  as="a"
                   onClick={() => window.location.assign('/api/auth/login')}
                 >
                   Login with Spotify
-                </SpotifyLink>
+                </SpotifyButton>
               </LoginButton>
             )}
 
@@ -405,17 +452,12 @@ class App extends Component {
               placeholder={placeholder}
               value={this.state.value}
               onChange={this.handleInputChange}
+              onKeyDown={this.handleKeyDown}
             />
 
-            <Flex>
-              <ActionButton
-                flex={1}
-                secondary
-                onClick={this.removeTrackNumbers}
-              >
-                Remove Track Numbers
-              </ActionButton>
-              <ActionButton primary flex={1} onClick={this.search}>
+            <Flex justifyContent="flex-end">
+              <Box $flex={1} />
+              <ActionButton primary $flex={0} onClick={this.search}>
                 <Spinner active={this.state.searching} />{' '}
                 {this.state.searching
                   ? 'Searching Spotify...'
@@ -431,8 +473,16 @@ class App extends Component {
               <Fragment>
                 <Box ml={4}>
                   <h4>
-                    Found {found} of {total} on Spotify
+                    Found {found - missing} of {total} on Spotify
                   </h4>
+                  {missing > 0 && (
+                    <Box mt={-3}>
+                      <Text as="small" fontSize={12}>
+                        Remove any line numbers or strange characters and try
+                        again.
+                      </Text>
+                    </Box>
+                  )}
                 </Box>
 
                 <TracklistContainer>
@@ -443,7 +493,7 @@ class App extends Component {
                     playTrack={this.playTrack}
                   />
 
-                  {this.state.missing.length ? (
+                  {/* {this.state.missing.length ? (
                     <React.Fragment>
                       <Box ml={4}>
                         <Text as="h4" mb={0}>
@@ -456,7 +506,7 @@ class App extends Component {
                       </Box>
                       <Tracklist results={this.state.missing} />
                     </React.Fragment>
-                  ) : null}
+                  ) : null} */}
                 </TracklistContainer>
 
                 <ActionsBar
@@ -498,3 +548,247 @@ class App extends Component {
 }
 
 export default App
+
+// const results = [
+//   {
+//       "id": "12BaQt9aYdTlEtKreqB5V4",
+//       "artist": "berlioz",
+//       "album": "jazz is for ordinary people",
+//       "title": "jazz is for ordinary people",
+//       "image": {
+//           "height": 640,
+//           "url": "https://i.scdn.co/image/ab67616d0000b273c9a8853d7b582a01bda44093",
+//           "width": 640
+//       },
+//       "uri": "spotify:track:12BaQt9aYdTlEtKreqB5V4"
+//   },
+//   {
+//       "id": "4rWpR9yfsYLw8EEfZn0jWT",
+//       "artist": "Gavinco",
+//       "album": "The Four J's",
+//       "title": "Silver",
+//       "image": {
+//           "height": 640,
+//           "url": "https://i.scdn.co/image/ab67616d0000b2736d30d3accef6a8e86220518e",
+//           "width": 640
+//       },
+//       "uri": "spotify:track:4rWpR9yfsYLw8EEfZn0jWT"
+//   },
+//   {
+//       "id": "2JROi1QDgFOMbcyG32jnoO",
+//       "artist": "DB Jeffer",
+//       "album": "All Me EP",
+//       "title": "Ni",
+//       "image": {
+//           "height": 640,
+//           "url": "https://i.scdn.co/image/ab67616d0000b273cf453fa5b055b149ee1e78f4",
+//           "width": 640
+//       },
+//       "uri": "spotify:track:2JROi1QDgFOMbcyG32jnoO"
+//   },
+//   {
+//       "id": "3QKwN4AqdLsgJGiz73B62I",
+//       "artist": "Ella Fitzgerald, Miguel Migs",
+//       "album": "Verve Remixed 2",
+//       "title": "Slap That Bass - Miguel Migs Petalpusher Remix",
+//       "image": {
+//           "height": 640,
+//           "url": "https://i.scdn.co/image/ab67616d0000b27310d63d9350864498fb3da8ef",
+//           "width": 640
+//       },
+//       "uri": "spotify:track:3QKwN4AqdLsgJGiz73B62I"
+//   },
+//   {
+//       "id": "3bjx5In6MlYVbyrsJ2Lbe2",
+//       "artist": "The Detroit Experiment",
+//       "album": "Deviation Classics",
+//       "title": "Think Twice",
+//       "image": {
+//           "height": 640,
+//           "url": "https://i.scdn.co/image/ab67616d0000b2730bcd125d171dca0ff76bbf7e",
+//           "width": 640
+//       },
+//       "uri": "spotify:track:3bjx5In6MlYVbyrsJ2Lbe2"
+//   },
+//   {
+//       "id": "3VtojB7L6g6skduYAwxr6x",
+//       "artist": "Llorca",
+//       "album": "Newcomer",
+//       "title": "The Novel Sound",
+//       "image": {
+//           "height": 640,
+//           "url": "https://i.scdn.co/image/ab67616d0000b27312e7135820be0681eb90ff03",
+//           "width": 640
+//       },
+//       "uri": "spotify:track:3VtojB7L6g6skduYAwxr6x"
+//   },
+//   {
+//       "id": "0gubHgzcmkpPO8TJnNNH7H",
+//       "artist": "Brooklyn Baby",
+//       "album": "Get It Together",
+//       "title": "Jazz Please",
+//       "image": {
+//           "height": 640,
+//           "url": "https://i.scdn.co/image/ab67616d0000b273017b63b2fdc143ebb5f6d865",
+//           "width": 640
+//       },
+//       "uri": "spotify:track:0gubHgzcmkpPO8TJnNNH7H"
+//   },
+//   {
+//       "id": "30w0Ow2tuaZL26ep5pEn2M",
+//       "artist": "Felipe Gordon",
+//       "album": "Wait on Me EP",
+//       "title": "The Semimodular Bird of Jazz",
+//       "image": {
+//           "height": 640,
+//           "url": "https://i.scdn.co/image/ab67616d0000b2732b48ebe9c7b3b0ed0bbb288f",
+//           "width": 640
+//       },
+//       "uri": "spotify:track:30w0Ow2tuaZL26ep5pEn2M"
+//   },
+//   {
+//       "id": "5WUFHsHalXJth7oBEZ3pPl",
+//       "artist": "DJ Spen, Ziggy Funk, Gary Hudgins",
+//       "album": "Transition",
+//       "title": "Don't Be Afraid",
+//       "image": {
+//           "height": 640,
+//           "url": "https://i.scdn.co/image/ab67616d0000b273c58b07a8d4c4730b80c9ef40",
+//           "width": 640
+//       },
+//       "uri": "spotify:track:5WUFHsHalXJth7oBEZ3pPl"
+//   },
+//   {
+//       "id": "6loDuwmsq6fazVxqqRhmcp",
+//       "artist": "berlioz, Ted Jasper",
+//       "album": "nyc in 1940",
+//       "title": "nyc in 1940",
+//       "image": {
+//           "height": 640,
+//           "url": "https://i.scdn.co/image/ab67616d0000b2736367b81be2901a8670d944e8",
+//           "width": 640
+//       },
+//       "uri": "spotify:track:6loDuwmsq6fazVxqqRhmcp"
+//   },
+//   {
+//       "id": "18xANokndhY8ZLuDLEzr1s",
+//       "artist": "Sameed",
+//       "album": "Jazzy-Ish By Mad Mats",
+//       "title": "Dusty Jazz",
+//       "image": {
+//           "height": 640,
+//           "url": "https://i.scdn.co/image/ab67616d0000b273744fa511ee019ee7a04f6dd2",
+//           "width": 640
+//       },
+//       "uri": "spotify:track:18xANokndhY8ZLuDLEzr1s"
+//   },
+//   {
+//       "id": "2n3DrjFLQVDY6mEuiM1R1L",
+//       "artist": "Dizzy Gillespie, James Moody, Streets of Fandango",
+//       "album": "Dizzy Gillespie & Friends: Concert of the Century (Remixes)",
+//       "title": "Darben the Redd Foxx - Streets of Fandango Remix",
+//       "image": {
+//           "height": 640,
+//           "url": "https://i.scdn.co/image/ab67616d0000b27396293fc9b9e5d10869eb724b",
+//           "width": 640
+//       },
+//       "uri": "spotify:track:2n3DrjFLQVDY6mEuiM1R1L"
+//   },
+//   {
+//       "id": "2uyKZb8FL9gd47ZUjaM8wp",
+//       "artist": "St Germain, Atjazz",
+//       "album": "Sittin' Here (Remixes)",
+//       "title": "Sittin' Here - Atjazz Remix",
+//       "image": {
+//           "height": 640,
+//           "url": "https://i.scdn.co/image/ab67616d0000b273d7bcfd8301b6c2b755551a96",
+//           "width": 640
+//       },
+//       "uri": "spotify:track:2uyKZb8FL9gd47ZUjaM8wp"
+//   },
+//   {
+//       "id": "4BBIhAwgBPSgU159OF2OzZ",
+//       "artist": "Move D, Le Rubrique",
+//       "album": "Bossa #1",
+//       "title": "Bossa #1 - The Late Night Dance Remix by Le Rubrique",
+//       "image": {
+//           "height": 640,
+//           "url": "https://i.scdn.co/image/ab67616d0000b273b8223b5d2c74f3a15cfe05a6",
+//           "width": 640
+//       },
+//       "uri": "spotify:track:4BBIhAwgBPSgU159OF2OzZ"
+//   },
+//   {
+//       "id": "6glOYu71QshPxanBJYrsYl",
+//       "artist": "Razz, Giant Rooks",
+//       "album": "Nocturnal",
+//       "title": "Another Heart/Another Mind",
+//       "image": {
+//           "height": 640,
+//           "url": "https://i.scdn.co/image/ab67616d0000b2732f232774eeac8d67b2fd7b63",
+//           "width": 640
+//       },
+//       "uri": "spotify:track:6glOYu71QshPxanBJYrsYl"
+//   },
+//   {
+//       "id": "3dv9xBJUj8NWRopMaSpZ4N",
+//       "artist": "Key Tronics Ensemble",
+//       "album": "Music You Got Me / Anamaria",
+//       "title": "Anamaria",
+//       "image": {
+//           "height": 640,
+//           "url": "https://i.scdn.co/image/ab67616d0000b2736077068cb98a8befa1e1d90e",
+//           "width": 640
+//       },
+//       "uri": "spotify:track:3dv9xBJUj8NWRopMaSpZ4N"
+//   },
+//   {
+//       "id": "5FH4l3SUZ2McAFUfOWfKkW",
+//       "artist": "Billie Holiday, Charles Feelgood",
+//       "album": "Remixed & Reimagined",
+//       "title": "All Of Me - Charles Feelgood Remix",
+//       "image": {
+//           "height": 640,
+//           "url": "https://i.scdn.co/image/ab67616d0000b2737a8787661c5bd6bae1f406db",
+//           "width": 640
+//       },
+//       "uri": "spotify:track:5FH4l3SUZ2McAFUfOWfKkW"
+//   },
+//   {
+//       "id": "1luy9yIB5zpCQggb1Tk1Tq",
+//       "artist": "Jean-Philippe Rameau, Stephan Pas, Paul Van Utrecht, Huib Ramaer, Cobla La Principal d'Amsterdam",
+//       "album": "Les Indes Galantes of Rameau Ontvlamt, Romantic Barock for Cobla and Narrator",
+//       "title": "Third entrée : The incas of Peru, Medley : loure en rondeau, gavotte 1 et 2",
+//       "image": {
+//           "height": 640,
+//           "url": "https://i.scdn.co/image/ab67616d0000b2733b7444c04ead248ddc28f9f7",
+//           "width": 640
+//       },
+//       "uri": "spotify:track:1luy9yIB5zpCQggb1Tk1Tq"
+//   },
+//   {
+//       "id": "3D81MlHW606IHBcxFGnX4R",
+//       "artist": "Tim Deluxe",
+//       "album": "JAS",
+//       "title": "JAS - Club Mix",
+//       "image": {
+//           "height": 640,
+//           "url": "https://i.scdn.co/image/ab67616d0000b273fed9870ca0758c9fc3e4afe0",
+//           "width": 640
+//       },
+//       "uri": "spotify:track:3D81MlHW606IHBcxFGnX4R"
+//   },
+//   {
+//       "id": "0q64O7oM5jsEQEv5hXXWfE",
+//       "artist": "Nina Simone, Floorplan",
+//       "album": "I Put A Spell On You (Floorplan Remix)",
+//       "title": "I Put A Spell On You - Floorplan Remix",
+//       "image": {
+//           "height": 640,
+//           "url": "https://i.scdn.co/image/ab67616d0000b273f80c39a71989ec1339be0c2a",
+//           "width": 640
+//       },
+//       "uri": "spotify:track:0q64O7oM5jsEQEv5hXXWfE"
+//   }
+// ]
+const results = []

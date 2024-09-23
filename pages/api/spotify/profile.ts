@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next'
+
 import { getSessionCookie } from './../../../utils/cookies'
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
@@ -8,7 +9,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     res.send({
       ...session.user
     })
-  } catch {
+  } catch(error) {
+    console.log('[api/spotify/profile]', error)
     res.status(401)
   }
 

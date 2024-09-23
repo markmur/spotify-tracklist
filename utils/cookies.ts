@@ -1,10 +1,9 @@
-import axios from 'axios'
-import Iron from '@hapi/iron'
-import querystring from 'querystring'
-import { serialize, CookieSerializeOptions } from 'cookie'
+import { CookieSerializeOptions, serialize } from 'cookie'
 import { NextApiRequest, NextApiResponse } from 'next'
 
-const { SESSION_SECRET } = process.env
+import Iron from '@hapi/iron'
+import axios from 'axios'
+import querystring from 'querystring'
 
 export interface UserSession {
   user: {
@@ -47,7 +46,7 @@ export const setAuthCookie = async (
   try {
     const signedSession = await Iron.seal(
       session,
-      SESSION_SECRET,
+      process.env.SPOTIFY_SESSION_SECRET,
       Iron.defaults
     )
 
@@ -79,7 +78,7 @@ export const getSessionCookie = async (
   }
 
   const cookie = cookies['spotify-tracklist.session']
-  const decoded = await Iron.unseal(cookie, SESSION_SECRET, Iron.defaults)
+  const decoded = await Iron.unseal(cookie, process.env.SPOTIFY_SESSION_SECRET, Iron.defaults)
 
   return decoded
 }
@@ -159,8 +158,8 @@ export const refreshAuthToken = (refreshToken: string) => {
   return axios.post(
     'https://accounts.spotify.com/api/token',
     querystring.stringify({
-      client_id: process.env.CLIENT_ID,
-      client_secret: process.env.CLIENT_SECRET,
+      client_id: process.env.SPOTIFY_CLIENT_ID,
+      client_secret: process.env.SPOTIFY_CLIENT_SECRET,
       grant_type: 'refresh_token',
       refresh_token: refreshToken
     }),
