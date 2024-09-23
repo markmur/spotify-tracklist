@@ -4,7 +4,7 @@ import styled, { css } from 'styled-components'
 import { Flex as StyledFlex } from 'grid-styled'
 import { lighten } from 'polished'
 
-const mobile = (content) => css`
+const mobile = (content: any) => css`
   @media (max-width: 767px) {
     ${content};
   }
@@ -14,12 +14,12 @@ export const Box = styled.div`
   ${space};
 `
 
-export const Flex = styled(StyledFlex)`
+export const Flex = styled(StyledFlex as any)`
   ${color};
   ${backgroundColor};
 `
 
-const getColor = (color) => (p) => p.theme.colors[color]
+const getColor = (color: any) => (p: any) => p.theme.colors[color]
 
 export const Label = styled.label`
   display: block;

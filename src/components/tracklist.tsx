@@ -13,7 +13,30 @@ import { Flex } from 'grid-styled'
 import Icon from './icon'
 import React from 'react'
 
-export default ({ results, currentTrack, paused, playTrack }) => {
+interface Track {
+  id?: string
+  title: string
+  artist: string
+  image?: {
+    url: string
+  }
+  uri?: string
+  missing?: boolean
+}
+
+interface TracklistProps {
+  results: Track[]
+  currentTrack: Track
+  paused: boolean
+  playTrack: (track: Track) => void
+}
+
+export default ({
+  results,
+  currentTrack,
+  paused,
+  playTrack
+}: TracklistProps) => {
   return (
     <Tracks>
       {results.map(({ id, title, artist, image, uri, missing }, i) => (
@@ -53,7 +76,7 @@ export default ({ results, currentTrack, paused, playTrack }) => {
             onClick={(event) => {
               event.preventDefault()
               event.stopPropagation()
-              window.location.href = uri
+              window.location.href = uri ?? ''
             }}
           >
             <Icon

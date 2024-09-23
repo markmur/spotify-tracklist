@@ -47,9 +47,11 @@
   },
   "devDependencies": {
     "@types/cookie": "^0.6.0",
+    "@types/grid-styled": "^4.2.1",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.6.0",
     "@types/react": "^18.3.8",
+    "@types/react-helmet": "^6.1.11",
     "@types/spotify-web-api-node": "^5.0.11",
     "@types/styled-components": "^5.1.34",
     "@types/styled-system": "^5.1.22",

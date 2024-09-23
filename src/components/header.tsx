@@ -3,7 +3,12 @@ import { Avatar, Header as StyledHeader } from '../styles'
 import { Flex } from 'grid-styled'
 import React from 'react'
 
-const Header = ({ user }) => {
+interface User {
+  name: string
+  image_url: string
+}
+
+const Header = ({ user }: { user: User }) => {
   return (
     <StyledHeader>
       <h3>Tracklist for Spotify</h3>

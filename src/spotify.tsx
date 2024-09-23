@@ -1,31 +1,35 @@
 import axios from 'axios'
 
 class Spotify {
-  constructor(basePath = '/api/spotify') {
-    this.basePath = basePath
+  basePath = '/api/spotify'
+
+  get(path: string) {
+    return this.request('get', path, {})
   }
 
-  get(path) {
-    return this.request('get', path)
-  }
-
-  post(path, data) {
+  post(path: string, data: any) {
     return this.request('post', path, data)
   }
 
-  put(path, data) {
+  put(path: string, data: any) {
     return this.request('put', path, data)
   }
 
-  request(method = 'get', path, data) {
-    return axios[method](this.basePath + path, data)
+  request(method: string, path: string, data: any) {
+    if (method === 'get') {
+      return axios.get(this.basePath + path, { params: data })
+    }
+    return (axios[method as keyof typeof axios] as Function)(
+      this.basePath + path,
+      data
+    )
   }
 
-  search(query) {
+  search(query: string) {
     return this.post('/search', { query })
   }
 
-  play(uris = [], device, token) {
+  play(uris: string[], device: string, token: string) {
     return axios.request({
       method: 'PUT',
       url: `https://api.spotify.com/v1/me/player/play?device_id=${device}`,
@@ -51,13 +55,13 @@ class Spotify {
     return this.get('/playlists')
   }
 
-  createPlaylist(name) {
+  createPlaylist(name: string) {
     return this.post('/playlists/new', { name })
   }
 
-  addTracksToPlaylist(playlistId, tracks) {
+  addTracksToPlaylist(playlistId: string, tracks: any[]) {
     return this.post(`/playlists/${playlistId}/tracks`, {
-      uris: tracks.map(x => x.uri)
+      uris: tracks.map((x: any) => x.uri)
     })
   }
 }

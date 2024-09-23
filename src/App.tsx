@@ -12,7 +12,7 @@ import {
   Textarea,
   TracklistContainer
 } from './styles'
-import React, { Component, Fragment } from 'react'
+import React, { ChangeEvent, Component, Fragment, KeyboardEvent } from 'react'
 
 import ActionsBar from './components/actions-bar'
 import Footer from './components/footer'
@@ -34,25 +34,25 @@ const RE_SPECIAL_DASHES = /[\u2013\u2014]/gm
 const RE_BRACKETS = /\[.*?\]$|\(.*?\)$/gim
 const RE_FEATURED = /\b(feat|ft)\.?\b/gi
 const RE_USER_HANDLE = /@[^\s]+(\s)?$/g // Detect and remove user handles (e.g., @55_MUSIC)
-
 const RE_EXTRA_WHITESPACE = /\s{2,}/g
 const RE_AND_IN_ARTIST = /\b\w?and\b/gi // Detect and replace "and" in the artist part
 
 // Helper functions
-const trimDashes = (x) => x.replace(RE_DASHES, '-')
-const removeEmptyLines = (x = '') => x.trim().length > 0
-const removeFeatured = (x) => x.replace(RE_FEATURED, '')
-const removeUserHandles = (x) => x.replace(RE_USER_HANDLE, '')
-const removeSpecialDashes = (x) => x.replace(RE_SPECIAL_DASHES, '-')
-const removeAmpersands = (x = '') => x.replace(/&/g, 'and')
-const removeBrackets = (x) => x.replace(RE_BRACKETS, '')
-const removeTimingInformation = (x) => x.replace(RE_TIMING, '')
-const cleanExtraWhitespace = (x) => x.replace(RE_EXTRA_WHITESPACE, ' ').trim()
+const trimDashes = (x: string) => x.replace(RE_DASHES, '-')
+const removeEmptyLines = (x: string = '') => x.trim().length > 0
+const removeFeatured = (x: string) => x.replace(RE_FEATURED, '')
+const removeUserHandles = (x: string) => x.replace(RE_USER_HANDLE, '')
+const removeSpecialDashes = (x: string) => x.replace(RE_SPECIAL_DASHES, '-')
+const removeAmpersands = (x: string = '') => x.replace(/&/g, 'and')
+const removeBrackets = (x: string) => x.replace(RE_BRACKETS, '')
+const removeTimingInformation = (x: string) => x.replace(RE_TIMING, '')
+const cleanExtraWhitespace = (x: string) =>
+  x.replace(RE_EXTRA_WHITESPACE, ' ').trim()
 
 // Replace "and" with a comma in the artist portion
-const cleanArtist = (x = '') => x.replace(RE_AND_IN_ARTIST, ',')
+const cleanArtist = (x: string = '') => x.replace(RE_AND_IN_ARTIST, ',')
 
-const processLine = (line = '') => {
+const processLine = (line: string = '') => {
   // Split into artist and track by finding the first dash (-)
   const parts = line.split(/\s*-\s*/, 2)
   if (parts.length < 2) return line // Return the original if no dash is found
@@ -63,13 +63,13 @@ const processLine = (line = '') => {
 }
 
 // Normalize special characters to their basic UTF-8 equivalents
-const normalizeText = (x = '') =>
+const normalizeText = (x: string = '') =>
   x
     .normalize('NFD') // Decompose special characters
     .replace(/[\u0300-\u036f\u1dc0-\u1dff\u20d0-\u20ff]/g, '') // Remove all combining diacritics
 
 // Function to capture artist and track information
-const captureTrackInformation = (x) => {
+const captureTrackInformation = (x: string) => {
   const captured =
     /(?:[\(\[]?[0-9]{0,2}[:.]*[0-9]{0,2}[:.]*[0-9]{0,2}[\]\)]?\s*)?([-:\s]*)(.+)/gi.exec(
       x
@@ -77,7 +77,7 @@ const captureTrackInformation = (x) => {
   return captured ? captured[2] : ''
 }
 
-const handleAuthExpiry = (error) => {
+const handleAuthExpiry = (error: any) => {
   if (error?.response?.status === 401) {
     window.location.assign('/api/auth/refresh')
   }
@@ -85,8 +85,39 @@ const handleAuthExpiry = (error) => {
   throw error
 }
 
-class App extends Component {
-  state = {
+interface AppProps {
+  initialValue: string
+  shouldLoadResults: boolean
+  user?: {
+    product?: string
+    token?: string
+  }
+}
+
+interface AppState {
+  init: boolean
+  value: string
+  user: Record<string, any>
+  results: Array<any>
+  total: number
+  found: number
+  playlists: Array<any>
+  adding: string | null
+  added: Array<string>
+  searching: boolean
+  paused: boolean | null
+  currentTrack: Record<string, any>
+  fetchingPlaylists: boolean
+  modalVisible: boolean
+  createPlaylistInput: string
+}
+
+class App extends Component<AppProps, AppState> {
+  player: any
+  deviceId: string
+  listeners: Array<string>
+
+  state: AppState = {
     init: true,
     value: this.props.initialValue,
     user: {},
@@ -141,11 +172,11 @@ class App extends Component {
   }
 
   connectSpotifyPlayer() {
-    const logError = ({ message }) => {
+    const logError = ({ message }: { message: string }) => {
       console.error(message)
     }
 
-    this.addListener('player_state_changed', (state) => {
+    this.addListener('player_state_changed', (state: any) => {
       if (!state) {
         this.setState({
           currentTrack: {},
@@ -167,14 +198,14 @@ class App extends Component {
     this.addListener('initialization_error', logError)
     this.addListener('authentication_error', logError)
     this.addListener('account_error', logError)
-    this.addListener('ready', ({ device_id }) => {
+    this.addListener('ready', ({ device_id }: { device_id: string }) => {
       this.deviceId = device_id
     })
 
     if (this.player) this.player?.connect()
   }
 
-  addListener(name, callback) {
+  addListener(name: string, callback: (state: any) => void) {
     this.listeners.push(name)
     if (this.player) this.player?.addListener(name, callback)
   }
@@ -185,11 +216,11 @@ class App extends Component {
     }))
   }
 
-  createPlaylist = (name) => {
+  createPlaylist = (name: string) => {
     return spotify.createPlaylist(name).catch(handleAuthExpiry)
   }
 
-  addTracksToPlaylist = async (id, tracks) => {
+  addTracksToPlaylist = async (id: string, tracks: Array<string>) => {
     this.setState({ adding: id })
     try {
       await spotify.addTracksToPlaylist(id, tracks)
@@ -218,38 +249,39 @@ class App extends Component {
     }
   }
 
-  play = async (tracks) => {
+  play = async (tracks: Array<string>) => {
     if (this.state.currentTrack.uri === tracks[0]) return this.player?.resume()
 
     return spotify
       .play(tracks, this.deviceId, this.state.user.token)
-      .catch((error) => {
+      .catch((error: any) => {
         console.error(error)
         handleAuthExpiry(error)
       })
   }
 
-  playTrack = (id, index, uri) => (event) => {
-    event.preventDefault()
-    event.stopPropagation()
+  playTrack =
+    (id: string, index: number, uri: string) => (event: React.MouseEvent) => {
+      event.preventDefault()
+      event.stopPropagation()
 
-    const userHasPremium = get(this.state.user, 'product') === 'premium'
+      const userHasPremium = get(this.state.user, 'product') === 'premium'
 
-    if (!userHasPremium) {
-      window.location.href = uri
-      return
+      if (!userHasPremium) {
+        window.location.href = uri
+        return
+      }
+
+      const { results } = this.state
+
+      // If track is currently playing, then pause it
+      if (this.state.currentTrack.id === id && !this.state.paused) {
+        return this.pause()
+      }
+
+      // Play all from track index onwards
+      this.play(results.slice(index).map((x) => x.uri))
     }
-
-    const { results } = this.state
-
-    // If track is currently playing, then pause it
-    if (this.state.currentTrack.id === id && !this.state.paused) {
-      return this.pause()
-    }
-
-    // Play all from track index onwards
-    this.play(results.slice(index).map((x) => x.uri))
-  }
 
   playAll = () => {
     const { results, currentTrack, paused } = this.state
@@ -286,7 +318,7 @@ class App extends Component {
     spotify
       .search(this.formatQueryForSearch(value))
       .then(({ data }) => {
-        const results = data.results.filter(Boolean).map((result) => {
+        const results = data.results.filter(Boolean).map((result: any) => {
           if (Array.isArray(result)) {
             return this.getTrackInformation(result[0])
           }
@@ -310,7 +342,7 @@ class App extends Component {
       })
   }
 
-  formatQueryForSearch(query) {
+  formatQueryForSearch(query: string) {
     return query
       .split('\n') // Split lines
       .filter(removeEmptyLines) // Remove empty lines
@@ -328,12 +360,12 @@ class App extends Component {
       .join('\n') // Join into a final string
   }
 
-  getTrackInformation(track) {
+  getTrackInformation(track: any) {
     const { id, name, uri, ...rest } = track
-    const image = get(track, 'album.images', []).find((x) => x)
+    const image = get(track, 'album.images', []).find((x: any) => x)
     const album = get(track, 'album.name', '')
     const artist = get(track, 'artists', [])
-      .map((x) => x.name)
+      .map((x: any) => x.name)
       .join(', ')
 
     return {
@@ -347,7 +379,7 @@ class App extends Component {
     }
   }
 
-  handleCreatePlaylistChange = (event) => {
+  handleCreatePlaylistChange = (event: ChangeEvent<HTMLInputElement>) => {
     this.setState({
       createPlaylistInput: event.target.value
     })
@@ -368,10 +400,10 @@ class App extends Component {
     }
   }
 
-  handleInputChange = (event) => {
+  handleInputChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     try {
       const encoded = btoa(event.target.value)
-      history.replaceState({}, null, document.location.origin + `/${encoded}`)
+      history.replaceState({}, '', document.location.origin + `/${encoded}`)
     } catch (error) {
       console.log('Something went wrong', error)
     }
@@ -381,7 +413,7 @@ class App extends Component {
     })
   }
 
-  handleKeyDown = (event) => {
+  handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.metaKey && event.key === 'Enter') {
       event.preventDefault()
       this.search()

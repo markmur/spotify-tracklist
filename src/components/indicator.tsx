@@ -1,5 +1,6 @@
-import React from 'react'
 import styled, { keyframes } from 'styled-components'
+
+import React from 'react'
 
 const dash = keyframes`
 62.5% {
@@ -10,7 +11,7 @@ to {
 }
 `
 
-export default styled(({ className }) => (
+export default styled(({ className }: { className?: string }) => (
   <div className={className}>
     <svg width="16px" height="12px">
       <polyline id="back" points="1 6 4 6 6 11 10 1 12 6 15 6" />
@@ -52,7 +53,7 @@ export default styled(({ className }) => (
   }
 
   svg polyline#front {
-    stroke: ${p => p.theme.colors.spotify};
+    stroke: ${(p) => p.theme.colors.spotify};
     stroke-dasharray: 12, 36;
     stroke-dashoffset: 48;
     animation: ${dash} 1s linear infinite;

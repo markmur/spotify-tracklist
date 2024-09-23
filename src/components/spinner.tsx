@@ -6,8 +6,12 @@ const spin = keyframes`
 }
 `
 
-export default styled.div`
-  display: ${p => (p.active ? 'inline-block' : 'none')};
+interface SpinnerProps {
+  active?: boolean
+}
+
+export default styled.div<SpinnerProps>`
+  display: ${(p) => (p.active ? 'inline-block' : 'none')};
   position: relative;
   top: 2px;
   margin-right: 1em;
