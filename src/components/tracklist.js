@@ -1,25 +1,25 @@
-import React from 'react'
-
-import Icon from './icon'
-import { Flex } from 'grid-styled'
-
 import {
-  Tracks,
+  FallbackImage,
+  Image,
+  PlaybackIcon,
+  SongArtist,
+  SongTitle,
   Track,
   TrackImage,
-  Image,
-  FallbackImage,
-  PlaybackIcon,
-  SongTitle,
-  SongArtist
+  Tracks
 } from '../styles'
+
+import { Flex } from 'grid-styled'
+import Icon from './icon'
+import React from 'react'
 
 export default ({ results, currentTrack, paused, playTrack }) => {
   return (
     <Tracks>
-      {results.map(({ id, title, artist, image, uri }, i) => (
+      {results.map(({ id, title, artist, image, uri, missing }, i) => (
         <Track
           key={id || title}
+          $missing={missing}
           onClick={playTrack ? playTrack(id, i, uri) : undefined}
         >
           <Flex>
@@ -50,7 +50,7 @@ export default ({ results, currentTrack, paused, playTrack }) => {
           </Flex>
           <a
             type="button"
-            onClick={event => {
+            onClick={(event) => {
               event.preventDefault()
               event.stopPropagation()
               window.location.href = uri

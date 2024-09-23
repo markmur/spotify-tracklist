@@ -1,9 +1,8 @@
-import React from 'react'
+import { ActionButton, ActionsBar as StyledActionsBar } from '../styles'
 
-import { ActionsBar as StyledActionsBar, ActionButton } from '../styles'
-
-import Spinner from './spinner'
 import Icon from './icon'
+import React from 'react'
+import Spinner from './spinner'
 
 const ActionsBar = ({
   shouldDisplayActionsBar,

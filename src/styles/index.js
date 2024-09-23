@@ -1,9 +1,10 @@
+import { backgroundColor, color, fontSize, space } from 'styled-system'
 import styled, { css } from 'styled-components'
+
 import { Flex as StyledFlex } from 'grid-styled'
 import { lighten } from 'polished'
-import { space, color, backgroundColor, fontSize } from 'styled-system'
 
-const mobile = content => css`
+const mobile = (content) => css`
   @media (max-width: 767px) {
     ${content};
   }
@@ -18,7 +19,7 @@ export const Flex = styled(StyledFlex)`
   ${backgroundColor};
 `
 
-const getColor = color => p => p.theme.colors[color]
+const getColor = (color) => (p) => p.theme.colors[color]
 
 export const Label = styled.label`
   display: block;
@@ -52,7 +53,7 @@ export const PlaybackIcon = styled.div`
   color: white;
   background: rgba(0, 0, 0, 0.7);
 
-  ${p => p.isPlaying && `visibility: visible`};
+  ${(p) => p.isPlaying && `visibility: visible`};
 `
 
 export const Input = styled.input`
@@ -125,7 +126,7 @@ export const LeftPanel = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  background: ${p => lighten(0.001, p.theme.colors.footer)};
+  background: ${(p) => lighten(0.001, p.theme.colors.footer)};
 
   ${mobile(`
     flex: 1;
@@ -138,7 +139,7 @@ export const RightPanel = styled.div`
   position: relative;
   flex-direction: column;
   justify-content: space-between;
-  background: ${p => p.theme.colors.dark};
+  background: ${(p) => p.theme.colors.dark};
   flex: 0 1 50%;
   color: white;
 
@@ -160,7 +161,7 @@ export const Textarea = styled.textarea`
   padding: 1.75em;
   color: white;
   resize: none;
-  background: ${p => lighten(0.001, p.theme.colors.footer)};
+  background: ${(p) => lighten(0.001, p.theme.colors.footer)};
 `
 
 export const EmptyState = styled.div`
@@ -199,6 +200,7 @@ export const Track = styled.div`
   align-items: center;
   cursor: pointer;
   border-bottom: 1px solid ${getColor('border')};
+  ${(p) => p.$missing && `opacity: 0.4`};
 
   &:hover {
     background: rgba(255, 255, 255, 0.05);
@@ -257,19 +259,19 @@ export const LoginButton = styled.div`
   border-radius: 45px;
   z-index: 100;
   white-space: nowrap;
-  background: ${p => lighten(0.001, p.theme.colors.footer)};
+  background: ${(p) => lighten(0.001, p.theme.colors.footer)};
 `
 
-const hoverColor = color => `
+const hoverColor = (color) => `
 &:hover {
   background: ${lighten(0.05, color)};
 }
 `
-const primary = p =>
+const primary = (p) =>
   p.primary &&
   `background: ${p.theme.colors.spotify}; ${hoverColor(p.theme.colors.spotify)}`
 
-const secondary = p =>
+const secondary = (p) =>
   p.secondary &&
   `background: ${p.theme.colors.dark}; ${hoverColor(p.theme.colors.dark)}`
 
@@ -283,7 +285,7 @@ export const ActionButton = styled.button`
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 1px;
-  flex: ${p => p.flex || 'initial'};
+  flex: ${(p) => p.$flex || 'initial'};
 
   i {
     position: relative;
@@ -313,31 +315,29 @@ export const SpotifyButton = styled.button`
   cursor: pointer;
   align-self: center;
 
-  ${p => hoverColor(p.theme.colors.spotify)};
-  ${p =>
-    p.small &&
+  ${(p) => hoverColor(p.theme.colors.spotify)};
+  ${(p) =>
+    p.$small &&
     `
     font-size: 12px;
     padding: 0.5em 1.75em;
   `};
 `
 
-export const SpotifyLink = SpotifyButton.withComponent('a')
-
 export const Avatar = styled.div.attrs({
   size: 30
 })`
-  width: ${p => p.size}px;
-  height: ${p => p.size}px;
+  width: ${(p) => p.size}px;
+  height: ${(p) => p.size}px;
   border-radius: 50%;
-  background-image: url(${p => p.src});
+  background-image: url(${(p) => p.$src});
   background-size: cover;
   background-position: center center;
   ${space};
 `
 
 export const Modal = styled.div`
-  display: ${p => (p.visible ? 'block' : 'none')};
+  display: ${(p) => (p.$visible ? 'block' : 'none')};
   position: fixed;
   top: 0;
   right: 0;

@@ -1,16 +1,16 @@
+import {
+  Backdrop,
+  Flex,
+  Image,
+  Input,
+  Modal,
+  Playlist,
+  Playlists,
+  SpotifyButton
+} from '../../styles'
+
 import React from 'react'
 import { get } from '../../utils'
-
-import {
-  Modal,
-  Backdrop,
-  Playlists,
-  Flex,
-  Input,
-  SpotifyButton,
-  Playlist,
-  Image
-} from '../../styles'
 
 export default React.forwardRef(
   (
@@ -29,7 +29,7 @@ export default React.forwardRef(
     ref
   ) => {
     return (
-      <Modal visible={visible}>
+      <Modal $visible={visible}>
         <Backdrop onClick={() => setModalState(false)} />
         <Playlists>
           <h2>My Playlists</h2>
@@ -49,13 +49,13 @@ export default React.forwardRef(
                 onChange={handleCreatePlaylistChange}
               />
               <div>
-                <SpotifyButton small onClick={handleCreateNewPlaylist}>
+                <SpotifyButton $small onClick={handleCreateNewPlaylist}>
                   Create
                 </SpotifyButton>
               </div>
             </Flex>
 
-            {playlists.map(playlist => (
+            {playlists.map((playlist) => (
               <Playlist key={playlist.id}>
                 <Flex alignItems="center" style={{ overflow: 'hidden' }}>
                   <Image mr={3} src={get(playlist.images[0], 'url')} />
@@ -64,7 +64,7 @@ export default React.forwardRef(
                   </a>
                 </Flex>
                 <SpotifyButton
-                  small
+                  $small
                   onClick={() =>
                     handleAddTracksToPlaylist(
                       playlist.id,
