@@ -1,15 +1,14 @@
 import axios, { AxiosRequestConfig } from 'axios'
-import Spotify from 'spotify-web-api-node'
 
-const { CLIENT_ID, CLIENT_SECRET, REDIRECT_URI } = process.env
+import Spotify from 'spotify-web-api-node'
 
 const SPOTIFY_URL = 'https://api.spotify.com/v1'
 
 export const createSpotifyApi = (token: string) => {
   const spotify = new Spotify({
-    clientId: CLIENT_ID,
-    clientSecret: CLIENT_SECRET,
-    redirectUri: REDIRECT_URI
+    clientId: process.env.SPOTIFY_CLIENT_ID,
+    clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
+    redirectUri: process.env.SPOTIFY_REDIRECT_URI
   })
 
   spotify.setAccessToken(token)

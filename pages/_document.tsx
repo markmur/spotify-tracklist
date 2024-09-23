@@ -1,34 +1,35 @@
-import Document, { Html, Head, Main, NextScript } from 'next/document'
-// Import styled components ServerStyleSheet
-import { ServerStyleSheet } from 'styled-components'
+import { Head, Html, Main, NextScript } from 'next/document'
+import { ServerStyleSheet, StyleSheetManager } from 'styled-components'
 
-export default class MyDocument extends Document {
-  static async getInitialProps({ renderPage }: any) {
-    // Step 1: Create an instance of ServerStyleSheet
-    const sheet = new ServerStyleSheet()
+import { useServerInsertedHTML } from 'next/navigation'
+import {useState} from 'react'
 
-    // Step 2: Retrieve styles from components in the page
-    const page = renderPage((App: any) => (props: any) =>
-      sheet.collectStyles(<App {...props} />)
-    )
-
-    // Step 3: Extract the styles as <style> tags
-    const styleTags = sheet.getStyleElement()
-
-    // Step 4: Pass styleTags as a prop
-    return { ...page, styleTags }
-  }
-
-  render() {
-    const props = this.props as any
-    return (
+export default function StyledComponentsRegistry({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  // Only create stylesheet once with lazy initial state
+  // x-ref: https://reactjs.org/docs/hooks-reference.html#lazy-initial-state
+  const [styledComponentsStyleSheet] = useState(() => new ServerStyleSheet())
+ 
+  useServerInsertedHTML(() => {
+    const styles = styledComponentsStyleSheet.getStyleElement()
+    styledComponentsStyleSheet.instance.clearTag()
+    return <>{styles}</>
+  })
+ 
+  if (typeof window !== 'undefined') return <>{children}</>
+ 
+  return (
+    <StyleSheetManager sheet={styledComponentsStyleSheet.instance}>
       <Html>
-        <Head>{props.styleTags}</Head>
+        <Head />
         <body>
           <Main />
           <NextScript />
         </body>
       </Html>
-    )
-  }
+    </StyleSheetManager>
+  )
 }

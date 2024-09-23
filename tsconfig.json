@@ -6,7 +6,7 @@
     "target": "es5",
     "module": "commonjs",
     "strict": false,
-    "esModuleInterop": true, 
+    "esModuleInterop": true,
     "lib": [
       "dom",
       "dom.iterable",
@@ -20,6 +20,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
+    "incremental": true
   },
   "include": [
     "next-env.d.ts",

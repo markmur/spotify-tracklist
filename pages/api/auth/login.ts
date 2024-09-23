@@ -10,17 +10,15 @@ const scopes = [
   'playlist-modify-public'
 ]
 
-const { CLIENT_ID, REDIRECT_URI } = process.env
-
 const buildURL = (scopes: string[], callback: string) => {
   return (
     'https://accounts.spotify.com/authorize?response_type=code' +
-    `&client_id=${CLIENT_ID}` +
+    `&client_id=${process.env.SPOTIFY_CLIENT_ID}` +
     `&scope=${encodeURIComponent(scopes.join(' '))}` +
     `&redirect_uri=${encodeURIComponent(callback)}`
   )
 }
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
-  return res.redirect(buildURL(scopes, REDIRECT_URI))
+  return res.redirect(buildURL(scopes, process.env.SPOTIFY_REDIRECT_URI))
 }

@@ -1,10 +1,9 @@
-import Axios from 'axios'
-import querystring from 'querystring'
 import { NextApiRequest, NextApiResponse } from 'next'
-import { createSpotifyApi } from './../../../utils/spotify'
-import { setAuthCookie, sendRefreshRedirect } from '../../../utils/cookies'
+import { sendRefreshRedirect, setAuthCookie } from '../../../utils/cookies'
 
-const { CLIENT_ID, CLIENT_SECRET, REDIRECT_URI } = process.env
+import Axios from 'axios'
+import { createSpotifyApi } from './../../../utils/spotify'
+import querystring from 'querystring'
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   const { code } = req.query
@@ -15,15 +14,17 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       querystring.stringify({
         grant_type: 'authorization_code',
         code,
-        client_id: CLIENT_ID,
-        client_secret: CLIENT_SECRET,
-        redirect_uri: REDIRECT_URI
+        client_id: process.env.SPOTIFY_CLIENT_ID,
+        client_secret: process.env.SPOTIFY_CLIENT_SECRET,
+        redirect_uri: process.env.SPOTIFY_REDIRECT_URI
       })
     )
 
     const spotify = createSpotifyApi(data.access_token)
 
     const profile = await spotify.getMe()
+
+    console.log({profile})
 
     const session = {
       user: {
@@ -47,6 +48,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
     return sendRefreshRedirect(res)
   } catch (error) {
+    console.log('[api/auth/callback]', error)
     res.status(400).send('error')
   }
 }
