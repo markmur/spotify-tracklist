@@ -1,5 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { sendRefreshRedirect, setAuthCookie } from '../../../utils/cookies'
+import {
+  UserSession,
+  sendRefreshRedirect,
+  setAuthCookie
+} from '../../../utils/cookies'
 
 import Axios from 'axios'
 import { createSpotifyApi } from './../../../utils/spotify'
@@ -24,14 +28,14 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
     const profile = await spotify.getMe()
 
-    console.log({profile})
+    console.log({ profile })
 
     const session = {
       user: {
         id: profile.body.id,
         display_name: profile.body.display_name,
         email: profile.body.email,
-        image_url: profile.body.images.find(image => image.url).url
+        image_url: profile.body.images?.find((image) => image.url)?.url
       },
       token: {
         access_token: data.access_token,
@@ -42,7 +46,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       }
     }
 
-    await setAuthCookie(res, session, {
+    await setAuthCookie(res, session as UserSession, {
       maxAge: data.expires_in * 1000
     })
 

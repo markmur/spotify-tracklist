@@ -1,9 +1,8 @@
-import { GetServerSideProps } from 'next'
-import cookie from 'cookie'
-
 import App from '../src/App'
-import { getSessionCookie } from '../utils/cookies'
+import { GetServerSideProps } from 'next'
 import { IncomingMessage } from 'http'
+import cookie from 'cookie'
+import { getSessionCookie } from '../utils/cookies'
 
 const getCookies = (req: IncomingMessage): Record<string, string> => {
   return cookie.parse(req.headers.cookie || '')
@@ -48,7 +47,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
   }
 }
 
-export default function IndexPage(props) {
+export default function IndexPage(props: any) {
   let initialValue = ''
 
   if (props.path) {

@@ -1,8 +1,10 @@
-import { NextApiResponse } from 'next'
 import {
   ApiRequestWithToken,
   withAuthSession
 } from './../../../../utils/cookies'
+
+import { AxiosError } from 'axios'
+import { NextApiResponse } from 'next'
 import { createSpotifyApi } from '../../../../utils/spotify'
 
 const newPlaylist = async (req: ApiRequestWithToken, res: NextApiResponse) => {
@@ -20,7 +22,7 @@ const newPlaylist = async (req: ApiRequestWithToken, res: NextApiResponse) => {
     )
 
     return res.send(body)
-  } catch (response) {
+  } catch (response: any) {
     const { status, statusText } = response
     return res.status(status).send({
       status,

@@ -1,16 +1,16 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import {
   getSessionCookie,
-  setAuthCookie,
+  refreshAuthToken,
   sendRefreshRedirect,
-  refreshAuthToken
+  setAuthCookie
 } from './../../../utils/cookies'
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   let session
 
   try {
-    session = await getSessionCookie(req.cookies)
+    session = await getSessionCookie(req.cookies as Record<string, string>)
 
     if (!session.token.refresh_token) {
       throw new Error("'refresh_token' missing from session")

@@ -1,6 +1,6 @@
-import axios from 'axios'
-import { NextApiResponse } from 'next'
 import { ApiRequestWithToken } from './../../../../../utils/cookies'
+import { NextApiResponse } from 'next'
+import axios from 'axios'
 import { withAuthSession } from '../../../../../utils/cookies'
 
 const tracks = async (req: ApiRequestWithToken, res: NextApiResponse) => {
@@ -18,7 +18,8 @@ const tracks = async (req: ApiRequestWithToken, res: NextApiResponse) => {
       }
     )
     return res.send(data)
-  } catch ({ response }) {
+  } catch (error: any) {
+    const { response } = error
     const { status, statusText } = response
     return res.status(status).send({
       status,

@@ -13,26 +13,24 @@ const search = async (req: ApiRequestWithToken, res: NextApiResponse) => {
     })
   }
 
-  const songs = query.split('\n').map(x => x.trim())
+  const songs = query.split('\n').map((x: string) => x.trim())
 
-  const requests = songs.map(song => {
+  const requests = songs.map((song: string) => {
     const split = song.split(/[-–]/gi)
     const spotify = createSpotifyApi(req.session.token.access_token)
-    const artist = (split[0] || '').trim();
-    const track = (split[1] || '').trim();
+    const artist = (split[0] || '').trim()
+    const track = (split[1] || '').trim()
 
     return spotify
-      .searchTracks(
-        `${artist} ${track}`
-      )
-      .then(res => {
+      .searchTracks(`${artist} ${track}`)
+      .then((res) => {
         if (res.body?.tracks?.total === 0) {
           return { id: track, artist, title: track, missing: true }
         }
 
-        return res.body.tracks.items || res.body.tracks
+        return res.body?.tracks?.items || res.body?.tracks
       })
-      .catch(error => {
+      .catch((error: any) => {
         console.error('[api/spotify/search] Failed to find track', error)
         return { id: track, artist, title: track, missing: true }
       })
@@ -46,7 +44,7 @@ const search = async (req: ApiRequestWithToken, res: NextApiResponse) => {
       results,
       missing: []
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error(error)
     return res.status(error.statusCode).json({
       message: error.body
